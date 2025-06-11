@@ -1,5 +1,6 @@
 import json
 import random
+import os
 
 def calculate_time_to_train(player_level):
     """Calculates the time cost for the 'train' action."""
@@ -47,21 +48,25 @@ def generate_game_state(elements):
         "nextChapterElement": next_chapter_element
     }
 
-def generate_synthetic_data(num_samples=1000):
+def generate_synthetic_data(num_samples=5000):
     """Generates a dataset of game states and their corresponding optimal actions."""
     print(f"Generating {num_samples} data samples...")
     data = []
     elements = ["fire", "water", "earth", "wind"]
+    
+    # Save the file in the project's root directory
+    output_path = os.path.join(os.path.dirname(__file__), '..', 'synthetic_data.json')
+
 
     for _ in range(num_samples):
         state = generate_game_state(elements)
         action = determine_next_action(state)
         data.append({"gameState": state, "nextAction": action})
         
-    with open("synthetic_data.json", "w") as f:
+    with open(output_path, "w") as f:
         json.dump(data, f, indent=2)
         
-    print("Synthetic data generated and saved to synthetic_data.json")
+    print(f"Synthetic data generated and saved to {output_path}")
 
 if __name__ == "__main__":
     generate_synthetic_data()

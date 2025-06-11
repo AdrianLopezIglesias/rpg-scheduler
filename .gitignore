@@ -3,3 +3,7 @@ synthetic_data.json
 rpg_model.joblib
 element_encoder.joblib
 action_encoder.joblib
+neural_network_model/action_encoder_nn.joblib
+neural_network_model/element_encoder_nn.joblib
+neural_network_model/rpg_model_nn.joblib
+neural_network_model/scaler_nn.joblib

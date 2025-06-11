@@ -2,142 +2,154 @@ import json
 import random
 import os
 
-# --- Core Game Logic Functions (Unchanged) ---
-# These functions define the rules of our game world.
+# --- NEW: World and Game Logic with Logistics ---
+ELEMENTS = ["fire", "water", "earth", "wind"]
+LOCATIONS = {
+    "City": {"purpose": "train", "travel_time": {"Volcano": 2, "Mines": 3, "Forest": 2, "Mountains": 4}},
+    "Volcano": {"purpose": "forge_fire", "travel_time": {"City": 2, "Mines": 5, "Forest": 4, "Mountains": 6}},
+    "Mines": {"purpose": "forge_earth", "travel_time": {"City": 3, "Volcano": 5, "Forest": 1, "Mountains": 2}},
+    "Forest": {"purpose": "forge_wind", "travel_time": {"City": 2, "Volcano": 4, "Mines": 1, "Mountains": 3}},
+    "Mountains": {"purpose": "forge_water", "travel_time": {"City": 4, "Volcano": 6, "Mines": 2, "Forest": 3}},
+}
+FORGE_LOCATIONS = {
+    "fire": "Volcano",
+    "water": "Mountains",
+    "earth": "Mines",
+    "wind": "Forest"
+}
+TRAIN_LOCATION = "City"
 
 def calculate_time_to_train(player_level):
-    """Calculates the time cost for the 'train' action."""
     return player_level * 2
 
 def calculate_time_to_forge(player_element_level):
-    """Calculates the time cost for the 'forgeElement' action."""
     return player_element_level
 
 def is_ready_for_next_chapter(state):
-    """Checks if the player's level is sufficient to advance the story."""
+    """
+    New, more complex scoring. The primary element is worth 1.5x, others 0.25x.
+    """
     player_level = state['playerLevel']
-    element_level = state['playerElementLevel'][state['nextChapterElement']]
-    next_chapter_level = state['nextChapterLevel']
-    return (player_level + element_level * 2) > next_chapter_level
+    primary_element = state['nextChapterElement']
+    primary_level = state['playerElementLevel'][primary_element]
+    
+    other_elements_level = 0
+    for el, lvl in state['playerElementLevel'].items():
+        if el != primary_element:
+            other_elements_level += lvl
+            
+    total_score = player_level + (primary_level * 1.5) + (other_elements_level * 0.25)
+    return total_score > state['nextChapterLevel']
 
 def determine_next_action(state):
-    """Determines the optimal next action based on the game state logic."""
-    if is_ready_for_next_chapter(state):
-        return "advanceStory"
-    else:
-        time_to_train = calculate_time_to_train(state['playerLevel'])
-        element_to_forge = state['nextChapterElement']
-        element_level = state['playerElementLevel'][element_to_forge]
-        time_to_forge = calculate_time_to_forge(element_level)
+    """
+    Determines the optimal action, now including travel time as a cost.
+    """
+    player_location = state['playerLocation']
 
-        if time_to_train <= time_to_forge:
+    # 1. Check if ready to advance and at the right location
+    chapter_location = state['nextChapterLocation']
+    if is_ready_for_next_chapter(state):
+        if player_location == chapter_location:
+            return "advanceStory"
+        else:
+            return f"travel_to_{chapter_location}"
+
+    # 2. If not ready, calculate the cost of training vs. forging
+    # Cost of Training = Travel time to City + Training Time
+    travel_to_train_time = LOCATIONS[player_location]["travel_time"].get(TRAIN_LOCATION, 0) # 0 if already there
+    train_cost = travel_to_train_time + calculate_time_to_train(state['playerLevel'])
+
+    # Cost of Forging = Travel time to Forge Location + Forging Time
+    element_to_forge = state['nextChapterElement']
+    forge_location = FORGE_LOCATIONS[element_to_forge]
+    travel_to_forge_time = LOCATIONS[player_location]["travel_time"].get(forge_location, 0)
+    forge_cost = travel_to_forge_time + calculate_time_to_forge(state['playerElementLevel'][element_to_forge])
+
+    # 3. Compare costs to decide primary goal (train or forge)
+    if train_cost <= forge_cost:
+        # Goal is to train. Are we at the training location?
+        if player_location == TRAIN_LOCATION:
             return "train"
         else:
+            return f"travel_to_{TRAIN_LOCATION}"
+    else:
+        # Goal is to forge. Are we at the right forge?
+        if player_location == forge_location:
             return f"forgeElement_{element_to_forge}"
+        else:
+            return f"travel_to_{forge_location}"
 
-# --- NEW: Scenario-Based Generation Functions ---
-# Instead of pure random generation, we create specific scenarios to ensure each action type is represented.
 
-def generate_advance_story_scenario(elements):
-    """Generates a state where advancing the story is the correct action."""
-    player_level = random.randint(10, 20)
-    next_chapter_element = random.choice(elements)
-    player_element_level = {el: random.randint(10, 20) for el in elements}
-    
-    # Ensure the player is over-levelled for the next chapter
-    required_level = player_level + player_element_level[next_chapter_element] * 2
-    next_chapter_level = random.randint(required_level - 15, required_level - 5)
-    
-    return {
-        "playerLevel": player_level,
-        "playerElementLevel": player_element_level,
-        "nextChapterLevel": next_chapter_level,
-        "nextChapterElement": next_chapter_element
-    }
+# --- Scenario-Based Generation Functions (Updated for new logic) ---
 
-def generate_train_scenario(elements):
-    """Generates a state where training is the most time-efficient action."""
-    # To make training cheaper, playerLevel should be low
-    player_level = random.randint(1, 5)
-    next_chapter_element = random.choice(elements)
-    
-    # To make forging expensive, the required element level should be high
-    player_element_level = {el: random.randint(1, 10) for el in elements}
-    player_element_level[next_chapter_element] = random.randint(15, 20)
-    
-    # Ensure the player is not ready for the next chapter yet
-    required_level = player_level + player_element_level[next_chapter_element] * 2
-    next_chapter_level = random.randint(required_level + 5, required_level + 15)
-
-    return {
-        "playerLevel": player_level,
-        "playerElementLevel": player_element_level,
-        "nextChapterLevel": next_chapter_level,
-        "nextChapterElement": next_chapter_element
-    }
-
-def generate_forge_scenario(elements):
-    """Generates a state where forging is the most time-efficient action."""
-    # To make training expensive, playerLevel should be high
+def generate_advance_story_scenario():
     player_level = random.randint(15, 20)
-    next_chapter_element = random.choice(elements)
+    primary_element = random.choice(ELEMENTS)
+    player_element_level = {el: random.randint(15, 20) for el in ELEMENTS}
     
-    # To make forging cheap, the required element level should be low
-    player_element_level = {el: random.randint(1, 10) for el in elements}
-    player_element_level[next_chapter_element] = random.randint(1, 5)
-
-    # Ensure the player is not ready for the next chapter yet
-    required_level = player_level + player_element_level[next_chapter_element] * 2
-    next_chapter_level = random.randint(required_level + 5, required_level + 15)
-
+    other_elements_level = sum(lvl for el, lvl in player_element_level.items() if el != primary_element)
+    total_score = player_level + (player_element_level[primary_element] * 1.5) + (other_elements_level * 0.25)
+    
+    # Player is over-levelled, so next chapter should be lower
+    next_chapter_level = random.uniform(total_score - 10, total_score - 2)
+    chapter_location = random.choice(list(LOCATIONS.keys()))
+    
     return {
         "playerLevel": player_level,
         "playerElementLevel": player_element_level,
         "nextChapterLevel": next_chapter_level,
-        "nextChapterElement": next_chapter_element
+        "nextChapterElement": primary_element,
+        "playerLocation": chapter_location, # Player starts at the right spot
+        "nextChapterLocation": chapter_location
+    }
+
+def generate_complex_scenario():
+    """Generates a scenario where a decision between train/forge/travel is required."""
+    player_level = random.randint(5, 15)
+    primary_element = random.choice(ELEMENTS)
+    player_element_level = {el: random.randint(1, 10) for el in ELEMENTS}
+
+    other_elements_level = sum(lvl for el, lvl in player_element_level.items() if el != primary_element)
+    total_score = player_level + (player_element_level[primary_element] * 1.5) + (other_elements_level * 0.25)
+    
+    # Player is under-levelled
+    next_chapter_level = random.uniform(total_score + 5, total_score + 15)
+    
+    return {
+        "playerLevel": player_level,
+        "playerElementLevel": player_element_level,
+        "nextChapterLevel": next_chapter_level,
+        "nextChapterElement": primary_element,
+        "playerLocation": random.choice(list(LOCATIONS.keys())),
+        "nextChapterLocation": random.choice(list(LOCATIONS.keys()))
     }
 
 
 def generate_synthetic_data(num_samples=1000):
-    """
-    Generates a balanced dataset by creating a specific number of samples for each action type.
-    """
-    print(f"Generating {num_samples} balanced data samples...")
+    print(f"Generating {num_samples} complex data samples...")
     data = []
-    elements = ["fire", "water", "earth", "wind"]
     
-    # Define the proportion of the dataset for each scenario
-    proportions = {
-        "advance": 0.4,
-        "train": 0.3,
-        "forge": 0.3
-    }
+    proportions = {"advance": 0.3, "complex": 0.7}
     
     for _ in range(int(num_samples * proportions["advance"])):
-        data.append(generate_advance_story_scenario(elements))
+        data.append(generate_advance_story_scenario())
         
-    for _ in range(int(num_samples * proportions["train"])):
-        data.append(generate_train_scenario(elements))
+    for _ in range(int(num_samples * proportions["complex"])):
+        data.append(generate_complex_scenario())
 
-    for _ in range(int(num_samples * proportions["forge"])):
-        data.append(generate_forge_scenario(elements))
-
-    # The list 'data' now contains states tailored to specific outcomes.
-    # We now determine the correct action for each generated state to create the final dataset.
     final_data = []
     for state in data:
         action = determine_next_action(state)
         final_data.append({"gameState": state, "nextAction": action})
 
-    # Shuffle the data to ensure randomness
     random.shuffle(final_data)
-
     output_path = os.path.join(os.path.dirname(__file__), '..', 'synthetic_data.json')
         
     with open(output_path, "w") as f:
         json.dump(final_data, f, indent=2)
         
-    print(f"Balanced synthetic data generated and saved to {output_path}")
+    print(f"Complex synthetic data generated and saved to {output_path}")
 
 if __name__ == "__main__":
-    generate_synthetic_data(5000) # Generating 5000 samples as an example
+    generate_synthetic_data(5000)

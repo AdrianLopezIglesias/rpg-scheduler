@@ -7,3 +7,4 @@ neural_network_model/action_encoder_nn.joblib
 neural_network_model/element_encoder_nn.joblib
 neural_network_model/rpg_model_nn.joblib
 neural_network_model/scaler_nn.joblib
+neural_network_model/location_encoder_nn.joblib

@@ -1,0 +1,5 @@
+.venv
+synthetic_data.json
+rpg_model.joblib
+element_encoder.joblib
+action_encoder.joblib

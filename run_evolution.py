@@ -56,6 +56,6 @@ def main_loop(total_generations, games_per_generation):
 
 if __name__ == "__main__":
     TOTAL_GENERATIONS = 10
-    GAMES_PER_GENERATION = 500
+    GAMES_PER_GENERATION = 1000
 
     main_loop(TOTAL_GENERATIONS, GAMES_PER_GENERATION)

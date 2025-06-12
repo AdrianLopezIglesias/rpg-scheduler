@@ -9,8 +9,6 @@ def flatten_state_for_nn(state, city_encoder):
     board_state = state['board']
     cube_features = [board_state.get(city, {}).get('cubes', 0) for city in city_encoder.classes_]
     player_location_encoded = city_encoder.transform([state['player_location']])[0]
-    
-    # FIX: Use 'actions_taken' which exists in the state, instead of the old keys.
     features = cube_features + [player_location_encoded, state['actions_taken']]
     return np.array(features).reshape(1, -1)
 
@@ -39,23 +37,42 @@ class NNAgent(Agent):
             self.model = None
 
     def choose_action(self, game_state, possible_actions):
+        """
+        An optimized method to choose an action by only evaluating the probabilities
+        of currently valid moves.
+        """
         if not self.model:
             return random.choice(possible_actions)
 
+        # 1. Preprocess the current game state
         flat_state = flatten_state_for_nn(game_state, self.city_encoder)
         scaled_state = self.scaler.transform(flat_state)
+        
+        # 2. Get action probabilities for ALL known actions just once
         action_probabilities = self.model.predict_proba(scaled_state)[0]
         
+        # 3. Create a fast lookup map of {encoded_action: probability}
+        # This maps the integer label of an action to its predicted probability.
+        prob_map = {action: prob for action, prob in zip(self.model.classes_, action_probabilities)}
+
+        # 4. Find the best VALID action efficiently
         best_action = None
         max_prob = -1
-
-        for i, encoded_action in enumerate(self.model.classes_):
-            action_str = self.action_encoder.inverse_transform([encoded_action])[0]
-            action_dict = json.loads(action_str)
-            
-            if action_dict in possible_actions:
-                if action_probabilities[i] > max_prob:
-                    max_prob = action_probabilities[i]
-                    best_action = action_dict
         
+        # Iterate through only the few currently possible actions
+        for action in possible_actions:
+            action_str = json.dumps(action, sort_keys=True)
+            
+            # Check if this action is one the model was trained on
+            if action_str in self.action_encoder.classes_:
+                encoded_action = self.action_encoder.transform([action_str])[0]
+                
+                # Look up the probability for this specific action
+                prob = prob_map.get(encoded_action, -1)
+
+                if prob > max_prob:
+                    max_prob = prob
+                    best_action = action
+
+        # Fallback to random if no known valid action is found
         return best_action if best_action else random.choice(possible_actions)

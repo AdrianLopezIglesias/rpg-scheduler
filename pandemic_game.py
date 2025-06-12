@@ -3,23 +3,34 @@ import json
 
 class PandemicGame:
     """
-    A redesigned, deterministic game environment with a smaller map and more turns
-    to facilitate AI learning.
+    The game environment, now with a larger, more complex map and a more
+    challenging initial setup to test the agent's strategic capabilities.
     """
     def __init__(self):
         self.map = self._create_map()
-        self.max_actions_per_game = 1000 # Increased from 100
+        self.max_actions_per_game = 250
         self.all_cities = list(self.map.keys())
         self.reset()
 
     def _create_map(self):
-        """A smaller, more manageable map for the agent to learn on."""
+        """The full-size map, restored to increase game complexity."""
         return {
-            "Atlanta": {"neighbors": ["Chicago", "Washington"]},
-            "Chicago": {"neighbors": ["Atlanta", "Montreal"]},
-            "Washington": {"neighbors": ["Atlanta", "New York"]},
-            "Montreal": {"neighbors": ["Chicago", "New York"]},
-            "New York": {"neighbors": ["Washington", "Montreal"]},
+            "San Francisco": {"color": "blue", "neighbors": ["Chicago", "Los Angeles", "Tokyo", "Manila"]},
+            "Chicago": {"color": "blue", "neighbors": ["San Francisco", "Los Angeles", "Mexico City", "Atlanta", "Montreal"]},
+            "Atlanta": {"color": "blue", "neighbors": ["Chicago", "Washington", "Miami"]},
+            "Montreal": {"color": "blue", "neighbors": ["Chicago", "Washington", "New York"]},
+            "Washington": {"color": "blue", "neighbors": ["Atlanta", "Montreal", "New York", "Miami"]},
+            "New York": {"color": "blue", "neighbors": ["Montreal", "Washington", "London", "Madrid"]},
+            "Los Angeles": {"color": "blue", "neighbors": ["San Francisco", "Chicago", "Mexico City", "Sydney"]},
+            "Mexico City": {"color": "blue", "neighbors": ["Los Angeles", "Chicago", "Miami", "Lima", "Bogota"]},
+            "Miami": {"color": "blue", "neighbors": ["Atlanta", "Mexico City", "Washington", "Bogota"]},
+            "Tokyo": {"color": "red", "neighbors": ["San Francisco"]},
+            "Manila": {"color": "red", "neighbors": ["San Francisco"]},
+            "London": {"color": "blue", "neighbors": ["New York"]},
+            "Madrid": {"color": "blue", "neighbors": ["New York"]},
+            "Sydney": {"color": "red", "neighbors": ["Los Angeles"]},
+            "Lima": {"color": "yellow", "neighbors": ["Mexico City"]},
+            "Bogota": {"color": "yellow", "neighbors": ["Mexico City", "Miami"]},
         }
 
     def reset(self):
@@ -31,9 +42,9 @@ class PandemicGame:
         return self.get_state_snapshot()
 
     def _setup_initial_board(self):
-        """Creates a new, random puzzle on the smaller board."""
+        """Creates a more difficult starting board state."""
         # Increased number of cubes to create a more challenging start.
-        num_cubes_to_place = random.randint(10, 15)
+        num_cubes_to_place = random.randint(25, 40)
         for _ in range(num_cubes_to_place):
             city = random.choice(self.all_cities)
             if self.board_state[city]["cubes"] < 3:

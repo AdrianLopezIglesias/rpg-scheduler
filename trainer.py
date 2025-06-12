@@ -18,15 +18,19 @@ def load_data(filepath):
 
 def get_all_cities():
     """Helper to get a consistent list of all cities for encoding."""
-    # FIX: This now correctly lists the cities from the smaller map.
-    return ["Atlanta", "Chicago", "Washington", "Montreal", "New York"]
+    # This list must match the map in pandemic_game.py
+    return [
+        "San Francisco", "Chicago", "Atlanta", "Montreal", "Washington",
+        "New York", "Los Angeles", "Mexico City", "Miami", "Tokyo",
+        "Manila", "London", "Madrid", "Sydney", "Lima", "Bogota"
+    ]
 
-def preprocess_training_data(list_of_games, all_cities, percentile_to_keep=0.2):
+def preprocess_training_data(list_of_games, all_cities):
     """
     Processes data by selecting only the actions from the top-performing games.
     """
     print("Preprocessing training data...")
-    
+
     # 1. Filter for only winning games
     winning_games = [g for g in list_of_games if g.get("final_result") == "win"]
     if not winning_games:
@@ -37,10 +41,10 @@ def preprocess_training_data(list_of_games, all_cities, percentile_to_keep=0.2):
     winning_games.sort(key=lambda g: g["total_actions"])
 
     # 3. Keep only the best games (e.g., top 20%)
+    percentile_to_keep = 1
     num_to_keep = int(len(winning_games) * percentile_to_keep)
     if num_to_keep == 0 and len(winning_games) > 0:
         num_to_keep = 1 # Always keep at least one game if possible
-    
     elite_games = winning_games[:num_to_keep]
     print(f"Found {len(winning_games)} winning games. Training on the best {len(elite_games)}.")
 
@@ -49,7 +53,7 @@ def preprocess_training_data(list_of_games, all_cities, percentile_to_keep=0.2):
 
     X_list, y_list = [], []
     city_encoder = LabelEncoder().fit(all_cities)
-    
+
     # Ensure all possible actions are learned by the encoder
     all_possible_actions = set()
     for game in list_of_games:
@@ -76,7 +80,7 @@ def train_next_generation(current_generation_num):
         sim_data = load_data(data_path)
         if sim_data:
             all_historical_games.extend(sim_data)
-    
+
     if not all_historical_games:
         print("No historical data found to train on.")
         return
@@ -87,17 +91,21 @@ def train_next_generation(current_generation_num):
         return
 
     X, y, city_enc, action_enc = training_result
-    
+
     if X.shape[0] < 2: # Need at least 2 samples to train/split
         print("Not enough valid data available for training.")
         return
 
+    # Calculate and print the number of input features (columns)
+    num_inputs = X.shape[1]
+    print(f"\nNumber of input features (columns) for the model: {num_inputs}")
+
     scaler = StandardScaler().fit(X)
     X_scaled = scaler.transform(X)
-    
-    model = MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(50, 25), alpha=0.001, verbose=False)
+
+    model = MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(400, 400), alpha=0.001, verbose=False)
     print(f"\nTraining model for Generation {current_generation_num + 1} on {X.shape[0]} elite action samples...")
-    model.fit(X_scaled, y) 
+    model.fit(X_scaled, y)
 
     output_dir = f"models/generation_{current_generation_num + 1}"
     os.makedirs(output_dir, exist_ok=True)

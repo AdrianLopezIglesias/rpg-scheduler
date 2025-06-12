@@ -36,3 +36,5 @@ data/generation_4/simulation_data.json
 __pycache__/pandemic_game.cpython-39.pyc
 __pycache__/simulation_runner.cpython-39.pyc
 __pycache__/trainer.cpython-39.pyc
+/models/*
+/data/*

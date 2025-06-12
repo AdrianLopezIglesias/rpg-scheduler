@@ -5,11 +5,10 @@ from agents.agents import RandomAgent, NNAgent
 
 def run_simulation(agent, num_games, output_path):
     """
-    Runs a specified number of games using a given agent and saves the data.
-    The data is saved as a list of games, where each game is a list of turns.
+    Runs games and saves them in the new format: a list of full game objects.
     """
     game = PandemicGame()
-    all_games_data = [] # Changed from all_game_data to all_games_data for clarity
+    all_games_played = []
     
     print(f"Running {num_games} games with {agent.__class__.__name__}...")
 
@@ -17,49 +16,34 @@ def run_simulation(agent, num_games, output_path):
         game_history = []
         state = game.reset()
         
-        while True:
+        for _ in range(game.max_actions_per_game):
             game_over_status = game.is_game_over()
             if game_over_status:
-                # Add the final result to all steps in this game's history
-                for step in game_history:
-                    step["final_result"] = game_over_status
-                    step["final_fitness"] = game.fitness_score
                 break
 
             possible_actions = game.get_possible_actions()
             chosen_action = agent.choose_action(state, possible_actions)
             
-            # Log the state before the action
+            # Log the state *before* the action is taken
             game_history.append({
                 "state": state,
                 "action_taken": chosen_action
             })
             
-            # Take the step
             state = game.step(chosen_action)
 
-        all_games_data.append(game_history) # Changed from .extend() to .append()
+        # After the game is over, save the entire game as one object
+        all_games_played.append({
+            "game_history": game_history,
+            "final_result": game.is_game_over(),
+            "total_actions": game.actions_taken
+        })
+        
         if (i + 1) % 100 == 0:
             print(f"  ...completed {i + 1}/{num_games} games.")
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w") as f:
-        json.dump(all_games_data, f, indent=2)
+        json.dump(all_games_played, f, indent=2)
     
     print(f"Simulation data saved to {output_path}")
-
-# This part is now better handled by the main evolution loop,
-# but can be kept for testing a single run.
-if __name__ == "__main__":
-    GENERATION = 0
-    NUM_GAMES_TO_SIMULATE = 1000
-
-    if GENERATION == 0:
-        current_agent = RandomAgent()
-    else:
-        model_prefix = f"models/generation_{GENERATION - 1}/pandemic_model"
-        current_agent = NNAgent(model_prefix)
-
-    output_file = f"data/generation_{GENERATION}/simulation_data.json"
-    
-    run_simulation(agent=current_agent, num_games=NUM_GAMES_TO_SIMULATE, output_path=output_file)

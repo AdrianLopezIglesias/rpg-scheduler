@@ -104,7 +104,7 @@ def train_pandemic_nn(X, y, weights, action_encoder, city_encoder):
         y_train_resampled = y_train
 
     print("Training Neural Network (MLPClassifier)...")
-    model = MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(50, 25), alpha=0.001)
+    model = MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(200), alpha=0.001)
     
     # Train on the resampled data, without the sample_weight argument
     model.fit(X_train_resampled, y_train_resampled)

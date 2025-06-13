@@ -171,20 +171,55 @@ class GNNAgent(Agent):
         return chosen_action_idx.item()
 
     def update_policy(self):
-        """Updates the policy network's weights using the REINFORCE algorithm."""
+        # Initializes an empty list to hold the calculated rewards for each step.
         discounted_rewards = []
+
+        # This variable, R, will hold the running total of the reward. It starts at 0.
         R = 0
+
+        # This loop iterates backwards through the raw rewards collected during the episode.
+        # Example: [0, 0, 0, 100] -> it will process 100, then 0, then 0, then 0.
         for r in self.rewards[::-1]:
+            # The core of credit assignment.
+            # The reward for a step is that step's raw reward plus the discounted reward of the *next* step.
+            # Gamma (e.g., 0.99) makes future rewards slightly less valuable than immediate ones.
             R = r + self.gamma * R
+            # Adds the calculated total reward for this step to the front of the list.
             discounted_rewards.insert(0, R)
+
+        # Converts the list of rewards into a PyTorch tensor for calculations.
         discounted_rewards = torch.tensor(discounted_rewards, dtype=torch.float32)
+
+        # This is a standard trick to stabilize training.
+        # It rescales the rewards so they have a mean of 0 and a standard deviation of 1.
+        # This prevents very high or very low reward values from causing drastic, unstable updates to the model.
         if len(discounted_rewards) > 1:
             discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-9)
+
+        # This is the core of the REINFORCE algorithm.
+        # It calculates the loss for each action taken in the episode.
+        # `log_prob` is how confident the model was about its action.
+        # `reward` is the final credit/blame that action received.
+        # Multiplying them tells the model how much to change.
+        # The negative sign is because optimizers minimize loss. We want to maximize reward, so we minimize the negative reward.
         policy_loss = [-log_prob * reward for log_prob, reward in zip(self.log_probs, discounted_rewards)]
+
+        # Resets the gradients. If we didn't do this, gradients would accumulate from previous training steps.
         self.optimizer.zero_grad()
+
+        # Converts the list of individual action losses into a single tensor and sums them up.
+        # This gives us the total loss for the entire episode.
         policy_loss = torch.stack(policy_loss).sum()
+
+        # This is the "grade". It calculates the gradients for each parameter (knob) in the network.
+        # It tells PyTorch how much each knob contributed to the final total loss.
         policy_loss.backward()
+
+        # This is the "training". It uses the calculated gradients to update the model's weights (turn the knobs).
+        # It nudges the weights in the direction that will reduce the loss (i.e., increase the likelihood of good actions).
         self.optimizer.step()
+
+        # Clears the memory of the last episode to prepare for the next one.
         self.log_probs = []
         self.rewards = []
 

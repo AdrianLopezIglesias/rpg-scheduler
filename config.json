@@ -1,25 +1,33 @@
 {
+    "rl_config": {
+        "difficulty": "tutorial",
+        "learning_rate": 0.001,
+        "gamma": 0.99,
+        "num_episodes": 10000,
+        "log_interval": 100,
+        "model_save_path": "models/rl_gnn_model.pth"
+    },
     "train_config": {
         "curriculum": {
-            "tutorial": 100.0,
-            "easy": 80.0,
-            "hard": 50.0
+            "tutorial": 95.0,
+            "easy": 75.0,
+            "hard": 40.0
         },
-        "games_per_generation": 500,
-        "max_generations_per_difficulty": 10
+        "games_per_generation": 200,
+        "max_generations_per_difficulty": 15
     },
     "champion_model_config": {
         "champion_model_dir": "models",
-        "games_to_validate": 1
+        "games_to_validate": 50
     },
     "calibrate_config": {
         "architectures_to_test": [
-            [50],
-            [100],
-            [50, 50],
+            [32],
+            [64],
+            [32, 16],
+            [64, 32],
             [100, 50],
-            [100, 100],
-            [200, 100, 50]
+            [64, 32, 16]
         ],
         "trials_per_architecture": 3
     },
@@ -35,19 +43,24 @@
         "map_difficulty_to_debug_on": "tutorial"
     },
     "agent_config": {
-        "epsilon_start": 0.5,
-        "epsilon_end": 0.05
+        "epsilon_start": 0.3,
+        "epsilon_end": 0.05,
+        "epsilon_decay_generations": 5
     },
     "model_config": {
-        "hidden_layer_sizes": [500],
-        "alpha": 0.001
+        "hidden_layer_sizes": [64, 32],
+        "alpha": 0.01,
+        "learning_rate_init": 0.001,
+        "max_iter": 1000
     },
     "trainer_config": {
-        "elite_games_to_keep": 1500
+        "elite_games_to_keep": 500,
+        "include_losing_games": true,
+        "max_losing_games_ratio": 2.0
     },
     "game_settings": {
         "tutorial": {
-            "max_actions_per_game": 15
+            "max_actions_per_game": 50
         },
         "easy": {
             "max_actions_per_game": 100

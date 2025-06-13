@@ -1,4 +1,8 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 pandas
 scikit-learn
 numpy
 joblib
+torch
+torch_geometric

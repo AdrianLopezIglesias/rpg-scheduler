@@ -3,14 +3,16 @@ import argparse
 from modules.orchestrator import run_training_loop, run_calibration_loop
 from modules.tester import run_test, run_debug
 from modules.utils import log
+# --- NEW IMPORT FOR PHASE 4 ---
+from modules.rl_trainer import run_rl_training
+# ------------------------------
 
 def main():
     """
     Main entry point for the Pandemic AI CLI.
-    Parses commands and delegates to the appropriate functions from other modules.
     """
     parser = argparse.ArgumentParser(description="Pandemic AI CLI")
-    parser.add_argument("command", choices=["train", "test", "debug", "calibrate"], help="The action to perform.")
+    parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl"], help="The action to perform.")
     args = parser.parse_args()
 
     try:
@@ -20,7 +22,13 @@ def main():
         log("Error: config.json not found. Please create it.")
         return
 
-    if args.command == "train":
+    # --- MODIFIED FOR PHASE 4 ---
+    # Added 'train_rl' command to launch the new trainer.
+    if args.command == "train_rl":
+        run_rl_training(config)
+    # ----------------------------
+    elif args.command == "train":
+        log("Running original supervised training loop.")
         run_training_loop(config)
     elif args.command == "calibrate":
         run_calibration_loop(config)

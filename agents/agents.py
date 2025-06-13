@@ -100,40 +100,106 @@ class NNAgent(Agent):
 
 
 # --- MODIFIED: PolicyNetwork is now map-agnostic ---
+# This defines the blueprint for our agent's brain.
+# It inherits from `nn.Module`, which is the base class for all neural network models in PyTorch.
 class PolicyNetwork(nn.Module):
     """GNN that learns node embeddings and uses heads to score action types."""
+    
+    # This is the constructor. It runs when we first create the brain.
+    # It sets up all the layers (the "knobs" and "processors") the network will use.
     def __init__(self, input_dim, hidden_dim=32):
+        # This line is required for all PyTorch models. It properly initializes the nn.Module parent class.
         super(PolicyNetwork, self).__init__()
+        
+        # This creates the first Graph Convolutional Network layer.
+        # It's the main processor for the graph. It takes the initial, simple features of each city
+        # (like cube count and player location) and starts creating a more complex, "hidden" summary.
+        # `input_dim` is the number of features per city (e.g., 2: cubes, player_is_here).
+        # `hidden_dim` is the size of the secret summary it creates (e.g., 32 numbers).
         self.conv1 = GCNConv(input_dim, hidden_dim)
+        
+        # This is the second GNN layer. It takes the summary from the first layer
+        # and processes it again, allowing the model to learn even more complex
+        # relationships between cities and their neighbors. It helps the model "think" two steps out.
         self.conv2 = GCNConv(hidden_dim, hidden_dim)
         
-        # Action-specific "heads"
+        # --- These are the "specialists" ---
+        
+        # The 'Move' Specialist: A simple linear layer.
+        # Its only job is to look at a city's final secret summary (size 32)
+        # and output a single number (score) saying "How good is it to MOVE to this city?"
         self.move_head = nn.Linear(hidden_dim, 1)
+        
+        # The 'Treat' Specialist: Another independent linear layer.
+        # Its job is to look at a city's summary and answer: "How good is it to TREAT this city?"
         self.treat_head = nn.Linear(hidden_dim, 1)
+        
+        # The 'Pass' Specialist: A third independent linear layer.
+        # Its job is different. It looks at a summary of the WHOLE board and answers:
+        # "How good is it to PASS my turn right now?"
         self.pass_head = nn.Linear(hidden_dim, 1)
 
+    # This is the `forward` pass. It defines what happens when we feed the game state into the brain.
+    # It's the step-by-step process of thinking.
     def forward(self, data):
+        # Unpacks the graph data object we give it.
+        # `x` is the list of city features.
+        # `edge_index` defines the map connections.
+        # `batch` is used by PyTorch Geometric to handle multiple graphs at once (we only use one).
         x, edge_index, batch = data.x, data.edge_index, data.batch
         
-        # 1. Get node embeddings
+        # === Step 1: Create the secret summaries (node embeddings) ===
+        
+        # Pass the city features and map connections through the first GNN layer.
+        # This is "message passing" - each city learns from its direct neighbors.
         x = self.conv1(x, edge_index)
+        # Apply a ReLU activation function. This is a standard step that helps the network learn
+        # complex patterns by adding non-linearity. It's like letting the brain think in curves, not just straight lines.
         x = F.relu(x)
+        # Pass the results through the second GNN layer for more sophisticated thinking.
+        # Now each city has learned from its neighbors, and its neighbors' neighbors.
         node_embeddings = self.conv2(x, edge_index)
         
-        # 2. Get a single embedding for the whole graph (for the 'pass' action)
+        # === Step 2: Get a summary of the whole board ===
+        
+        # Take the secret summary of every single city and average them together.
+        # This creates one single summary vector that represents the entire state of the board.
         graph_embedding = global_mean_pool(node_embeddings, batch)
         
+        # The brain's "thinking" is done. It now returns two things:
+        # 1. A detailed list of secret summaries for every city (`node_embeddings`).
+        # 2. One single summary for the whole game (`graph_embedding`).
+        # The agent will use these to ask the specialists for their opinions.
         return node_embeddings, graph_embedding
 
 # --- MODIFIED: GNNAgent now uses the agnostic network ---
+# This class represents the agent itself. It holds the "brain" (the PolicyNetwork)
+# and manages the process of choosing actions and learning from experience.
 class GNNAgent(Agent):
     """RL Agent that uses the map-agnostic GNN."""
-    def __init__(self, input_dim, config): # Output_dim removed
+
+    # The constructor for the agent. It runs once when we create the agent.
+    def __init__(self, input_dim, config):
+        # Gets the specific configuration for the Reinforcement Learning process.
         rl_cfg = config['rl_config']
+        
+        # Creates the agent's brain by making a new instance of our PolicyNetwork.
+        # `input_dim` tells the brain how many features each city has (e.g., 2).
         self.policy_network = PolicyNetwork(input_dim)
+        
+        # Creates an "optimizer". This is the tool that will physically "turn the knobs"
+        # or update the weights of our PolicyNetwork during learning.
+        # We tell it which knobs to turn (`self.policy_network.parameters()`) and how fast (`lr`).
         self.optimizer = optim.Adam(self.policy_network.parameters(), lr=rl_cfg['learning_rate'])
+        
+        # Gamma is the "discount factor". It's a number slightly less than 1 (e.g., 0.99)
+        # that determines how much the agent values future rewards over immediate ones.
         self.gamma = rl_cfg['gamma']
+        
+        # These are the agent's short-term memory for a single game (episode).
+        # `log_probs` will store how confident the agent was about each action it took.
         self.log_probs = []
+        # `rewards` will store the raw reward received at each step (usually all 0 until the end).
         self.rewards = []
 
     def choose_action(self, game, state_graph):
@@ -141,33 +207,64 @@ class GNNAgent(Agent):
         Calculates scores for only the currently legal actions and chooses one.
         This is the core of the map-agnostic approach.
         """
+        # First, the agent "thinks" by passing the current game state graph through its brain.
+        # It gets back the two key outputs: the secret summary for each city (`node_embeddings`)
+        # and the single summary for the whole board (`graph_embedding`).
         (node_embeddings, graph_embedding) = self.policy_network(state_graph)
         
+        # The agent asks the game, "What are the legal moves I can make right now?"
+        # This returns a boolean list, e.g., [False, True, False, True, ...],
+        # where True means the action at that index is possible.
         possible_actions_mask = game.get_possible_action_mask()
         
-        # We build a sparse logits tensor, calculating scores only for legal moves
+        # The agent creates a list of scores (called "logits") for every single action in the game.
+        # It starts by giving every action a very, very bad score (-1e8, which is like negative infinity).
+        # This ensures that illegal moves have no chance of being chosen.
         logits = torch.full_like(possible_actions_mask, -1e8, dtype=torch.float)
 
+        # Now, the agent loops through the list of all possible actions in the entire game.
         for action_idx, is_possible in enumerate(possible_actions_mask):
+            # It only does work for the actions that are currently legal.
             if is_possible:
+                # It gets the description of the legal action (e.g., {type: "move", target_idx: 4}).
                 action_desc = game.idx_to_action[action_idx]
                 score = 0
+                
+                # It checks the type of action to decide which "specialist" to consult.
                 if action_desc['type'] == 'move':
+                    # If it's a move, it gets the secret summary of the target city...
                     target_node_idx = action_desc['target_idx']
+                    # ...and gives it to the 'Move' specialist to get a score.
                     score = self.policy_network.move_head(node_embeddings[target_node_idx])
+                
                 elif action_desc['type'] == 'treat':
+                    # If it's a treat, it gets the secret summary of the target city...
                     target_node_idx = action_desc['target_idx']
+                    # ...and gives it to the 'Treat' specialist.
                     score = self.policy_network.treat_head(node_embeddings[target_node_idx])
+                
                 elif action_desc['type'] == 'pass':
+                    # If it's a pass, it uses the summary of the whole board...
+                    # ...and gives it to the 'Pass' specialist.
                     score = self.policy_network.pass_head(graph_embedding)
                 
+                # The agent updates the score for this legal action in its list of logits.
                 logits[action_idx] = score
 
+        # After scoring all legal moves, the agent creates a probability distribution.
+        # Actions with higher scores will have a higher probability of being picked.
         prob_dist = Categorical(logits=logits)
+        
+        # The agent then samples from this distribution to pick one action.
+        # This means it usually picks the highest-scored action, but sometimes
+        # it will "explore" by picking a lower-scored one.
         chosen_action_idx = prob_dist.sample()
         
+        # The agent saves the log-probability of the action it chose.
+        # This number represents how "confident" it was. It's crucial for learning later.
         self.log_probs.append(prob_dist.log_prob(chosen_action_idx))
         
+        # Finally, it returns the index of the single action it decided to take.
         return chosen_action_idx.item()
 
     def update_policy(self):

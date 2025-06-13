@@ -1,24 +1,24 @@
 {
     "playback_config": {
-        "model_path": "models/rl_gnn_model_easy_continued.pth",
+        "model_path": "models/rl_gnn_model_hard_continued.pth",
         "difficulty": "hard"
     },
     "validation_config": {
-        "model_path": "models/rl_gnn_model_easy_continued.pth",
-        "difficulty": "hard",
+        "model_path": "models/rl_gnn_model_hard_continued.pth",
+        "difficulty": "easy",
         "num_games": 100
     },
     "debug_train_config": {
         "difficulty": "tutorial"
     },
     "rl_config": {
-        "difficulty": "easy",
+        "difficulty": "hard",
         "learning_rate": 0.001,
         "gamma": 0.99,
         "num_episodes": 20000,
         "log_interval": 100,
-        "load_model_path": "models/rl_gnn_model_agnostic.pth",
-        "model_save_path": "models/rl_gnn_model_easy_continued.pth"
+        "load_model_path": "models/rl_gnn_model_easy_continued.pth",
+        "model_save_path": "models/rl_gnn_model_hard_continued.pth"
     },
     "train_config": {
         "curriculum": {

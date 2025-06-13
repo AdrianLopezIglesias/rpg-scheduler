@@ -16,6 +16,14 @@ def run_rl_training(config):
     input_dim = 2 # [cubes, is_player_here]
     agent = GNNAgent(input_dim=input_dim, config=config) # output_dim removed
     
+    if rl_cfg.get("load_model_path"):
+        try:
+            log(f"Loading pre-trained model from: {rl_cfg['load_model_path']}")
+            agent.load_model(rl_cfg['load_model_path'])
+        except FileNotFoundError:
+            log(f"Warning: Pre-trained model not found at {rl_cfg['load_model_path']}. Starting from scratch.")
+ 
+
     scores_deque = deque(maxlen=100)
     
     for i_episode in range(1, rl_cfg['num_episodes'] + 1):

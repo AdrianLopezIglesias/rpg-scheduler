@@ -1,7 +1,12 @@
 {
     "playback_config": {
-        "model_path": "models/rl_gnn_model_agnostic.pth",
-        "difficulty": "easy"
+        "model_path": "models/rl_gnn_model_easy_continued.pth",
+        "difficulty": "hard"
+    },
+    "validation_config": {
+        "model_path": "models/rl_gnn_model_easy_continued.pth",
+        "difficulty": "hard",
+        "num_games": 100
     },
     "debug_train_config": {
         "difficulty": "tutorial"
@@ -12,7 +17,8 @@
         "gamma": 0.99,
         "num_episodes": 20000,
         "log_interval": 100,
-        "model_save_path": "models/rl_gnn_model_agnostic.pth"
+        "load_model_path": "models/rl_gnn_model_agnostic.pth",
+        "model_save_path": "models/rl_gnn_model_easy_continued.pth"
     },
     "train_config": {
         "curriculum": {

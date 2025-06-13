@@ -2,10 +2,20 @@ import os
 import json
 import joblib
 import numpy as np
+from datetime import datetime
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
 from agents.agents import create_feature_vector
 from game.pandemic_game import PandemicGame 
+
+# --- Report Configuration ---
+# A single timestamp is generated when the module is first loaded.
+# This ensures all generations within a single run log to the same report file.
+RUN_TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+REPORTS_DIR = 'reports'
+os.makedirs(REPORTS_DIR, exist_ok=True)
+REPORT_PATH = os.path.join(REPORTS_DIR, f'training_report_{RUN_TIMESTAMP}.json')
+
 
 def load_data(filepath):
     try:
@@ -46,12 +56,12 @@ def preprocess_training_data(list_of_games, difficulty, config):
 
 def update_report(generation_num, difficulty, analysis_results, config):
     """Loads, updates, and saves a JSON report of the training progress."""
-    report_path = 'training_report.json'
     try:
-        with open(report_path, 'r') as f:
+        # Try to load the report for the current run.
+        with open(REPORT_PATH, 'r') as f:
             report = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        # If no report exists, create a new one with the config.
+        # If it doesn't exist, create a new one.
         report = {
             "training_run_config": config,
             "generational_results": []
@@ -61,16 +71,16 @@ def update_report(generation_num, difficulty, analysis_results, config):
     report_entry = {
         "generation": generation_num,
         "difficulty": difficulty,
-        **analysis_results  # Unpack the analysis dictionary here
+        **analysis_results
     }
     report["generational_results"].append(report_entry)
 
     # Sort results by generation to keep the report clean.
     report["generational_results"].sort(key=lambda r: r['generation'])
 
-    with open(report_path, 'w') as f:
+    with open(REPORT_PATH, 'w') as f:
         json.dump(report, f, indent=4)
-    print(f"Training report updated: {report_path}")
+    print(f"Training report updated: {REPORT_PATH}")
 
 def train_next_generation(current_generation_num, difficulty, config, analysis_results):
     """The main training function, now correctly accepts analysis_results for reporting."""

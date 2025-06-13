@@ -38,3 +38,5 @@ __pycache__/simulation_runner.cpython-39.pyc
 __pycache__/trainer.cpython-39.pyc
 /models/*
 /data/*
+reports/training_report_2025-06-13_11-35-52.json
+reports/training_report_2025-06-13_11-43-26.json

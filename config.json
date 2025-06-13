@@ -1,47 +1,47 @@
 {
     "train_config": {
-        "curriculum": [
-            "easy",
-            "easy",
-            "easy",
-            "easy",
-            "easy",
-            "hard",
-            "hard",
-            "hard",
-            "hard",
-            "hard"
+        "curriculum": ["easy", "easy", "easy", "hard", "hard", "hard"],
+        "games_per_generation": 500
+    },
+    "calibrate_config": {
+        "architectures_to_test": [
+            [50],
+            [100],
+            [50, 50],
+            [100, 50],
+            [100, 100],
+            [200, 100, 50]
         ],
-        "games_per_generation": 1000
+        "trials_per_architecture": 3
     },
     "test_config": {
         "model_training_difficulty": "easy",
-        "model_generation_to_test": 9,
+        "model_generation_to_test": 2,
         "map_difficulty_to_test_on": "hard",
-        "num_games_to_test": 1000
+        "num_games_to_test": 500
     },
     "debug_config": {
         "model_training_difficulty": "easy",
         "model_generation_to_debug": 2,
-        "map_difficulty_to_debug_on": "easy"
+        "map_difficulty_to_debug_on": "hard"
     },
     "agent_config": {
         "epsilon_start": 0.5,
         "epsilon_end": 0.05
     },
     "model_config": {
-        "hidden_layer_sizes": [300, 300],
+        "hidden_layer_sizes": [100, 50],
         "alpha": 0.001
     },
     "trainer_config": {
-        "elite_games_to_keep": 1000
+        "elite_games_to_keep": 100
     },
     "game_settings": {
         "easy": {
-            "max_actions_per_game": 50
+            "max_actions_per_game": 1000
         },
         "hard": {
-            "max_actions_per_game": 100
+            "max_actions_per_game": 1500
         }
     }
 }

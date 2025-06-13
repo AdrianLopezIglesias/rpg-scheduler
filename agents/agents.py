@@ -4,9 +4,7 @@ import numpy as np
 import copy
 
 def create_feature_vector(game_state, game):
-    """
-    Creates the 'Threat-Aware' feature vector from a given game state.
-    """
+    """Creates the 'Threat-Aware' feature vector from a given game state."""
     features = []
     player_loc = game_state['player_location']
     board = game_state['board']
@@ -30,9 +28,6 @@ def create_feature_vector(game_state, game):
     danger_cities = [city for city, data in board.items() if data['cubes'] == 3]
     features.append(len(danger_cities))
     features.append(min([game.get_distance(player_loc, c) for c in danger_cities]) if danger_cities else -1)
-    
-    # Add the maximum number of turns as a feature
-    features.append(game.max_actions_per_game)
     
     return np.array(features).reshape(1, -1)
 
@@ -68,7 +63,7 @@ class NNAgent(Agent):
         if not self.model:
             return random.choice(possible_actions)
 
-        # Epsilon-Greedy Strategy: Explore or Exploit?
+        # Epsilon-Greedy Strategy
         if random.random() < self.epsilon:
             return random.choice(possible_actions)
         
@@ -77,17 +72,11 @@ class NNAgent(Agent):
         best_predicted_score = -float('inf')
 
         for action in possible_actions:
-            # 1. Imagine the state after this action
             future_state = self._simulate_next_state(game, action)
-            
-            # 2. Prepare the state for the model
             feature_vector = create_feature_vector(future_state, game)
             scaled_features = self.scaler.transform(feature_vector)
-            
-            # 3. Ask the model to predict the score of this future state
             predicted_score = self.model.predict(scaled_features)[0]
             
-            # 4. Keep track of the action that leads to the highest predicted score
             if predicted_score > best_predicted_score:
                 best_predicted_score = predicted_score
                 best_action = action

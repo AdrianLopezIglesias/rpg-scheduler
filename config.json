@@ -1,6 +1,20 @@
 {
     "train_config": {
-        "curriculum": ["easy", "easy", "easy", "hard", "hard", "hard"],
+        "curriculum": [
+            "tutorial",
+            "tutorial",
+            "tutorial",
+            "easy",
+            "easy",
+            "easy",
+            "easy",
+            "easy",
+            "hard",
+            "hard",
+            "hard",
+            "hard",
+            "hard"
+        ],
         "games_per_generation": 500
     },
     "calibrate_config": {
@@ -22,8 +36,8 @@
     },
     "debug_config": {
         "model_training_difficulty": "easy",
-        "model_generation_to_debug": 2,
-        "map_difficulty_to_debug_on": "hard"
+        "model_generation_to_debug": 1,
+        "map_difficulty_to_debug_on": "easy"
     },
     "agent_config": {
         "epsilon_start": 0.5,
@@ -34,14 +48,17 @@
         "alpha": 0.001
     },
     "trainer_config": {
-        "elite_games_to_keep": 100
+        "elite_games_to_keep": 2000
     },
     "game_settings": {
+        "tutorial": {
+            "max_actions_per_game": 15
+        },
         "easy": {
-            "max_actions_per_game": 1000
+            "max_actions_per_game": 50
         },
         "hard": {
-            "max_actions_per_game": 1500
+            "max_actions_per_game": 300
         }
     }
 }

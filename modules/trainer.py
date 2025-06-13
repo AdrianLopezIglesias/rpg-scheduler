@@ -2,122 +2,85 @@ import os
 import json
 import joblib
 import numpy as np
-from datetime import datetime
+import random
+import shutil
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
 from agents.agents import create_feature_vector
 from game.pandemic_game import PandemicGame 
 
-# --- Report Configuration ---
-# A single timestamp is generated when the module is first loaded.
-# This ensures all generations within a single run log to the same report file.
-RUN_TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-REPORTS_DIR = 'reports'
-os.makedirs(REPORTS_DIR, exist_ok=True)
-REPORT_PATH = os.path.join(REPORTS_DIR, f'training_report_{RUN_TIMESTAMP}.json')
-
-
 def load_data(filepath):
     try:
-        with open(filepath, "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return None
+        with open(filepath, "r") as f: return json.load(f)
+    except FileNotFoundError: return None
+
+def get_elite_games(list_of_games, num_to_keep):
+    if not list_of_games: return []
+    winning_games = [g for g in list_of_games if g.get("final_result") == "win"]
+    winning_games.sort(key=lambda g: g["total_actions"])
+    return winning_games[:num_to_keep]
 
 def preprocess_training_data(list_of_games, difficulty, config):
-    cfg = config['trainer_config']
-    winning_games = [g for g in list_of_games if g.get("final_result") == "win"]
-    if not winning_games:
-        print("Warning: No winning games found. Cannot train.")
-        return None, None
-        
-    winning_games.sort(key=lambda g: g["total_actions"])
-    elite_games = winning_games[:cfg['elite_games_to_keep']]
-    
-    print(f"Training on data from {len(elite_games)} best games.")
-
-    training_data = [turn for game in elite_games for turn in game["game_history"]]
-    
-    print(f"Total training samples (turns): {len(training_data)}")
-
     X_list, y_list = [], []
-    # Pass the config to the game instance to ensure it initializes correctly
-    game_instance_for_calcs = PandemicGame(difficulty=difficulty, config=config)
+    game_instance = PandemicGame(difficulty=difficulty, config=config)
     
-    for game_data in elite_games:
+    for game_data in list_of_games:
         score = 1000 - game_data["total_actions"]
         for turn in game_data["game_history"]:
             state = turn['state']
-            feature_vector = create_feature_vector(state, game_instance_for_calcs)
-            X_list.append(feature_vector[0])
+            feature_vector = create_feature_vector(state, game_instance)[0]
+            X_list.append(feature_vector)
             y_list.append(score)
 
     return np.array(X_list), np.array(y_list)
 
-def update_report(generation_num, difficulty, analysis_results, config):
-    """Loads, updates, and saves a JSON report of the training progress."""
-    try:
-        # Try to load the report for the current run.
-        with open(REPORT_PATH, 'r') as f:
-            report = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        # If it doesn't exist, create a new one.
-        report = {
-            "training_run_config": config,
-            "generational_results": []
-        }
-
-    # Add the current generation's results.
-    report_entry = {
-        "generation": generation_num,
-        "difficulty": difficulty,
-        **analysis_results
-    }
-    report["generational_results"].append(report_entry)
-
-    # Sort results by generation to keep the report clean.
-    report["generational_results"].sort(key=lambda r: r['generation'])
-
-    with open(REPORT_PATH, 'w') as f:
-        json.dump(report, f, indent=4)
-    print(f"Training report updated: {REPORT_PATH}")
-
 def train_next_generation(current_generation_num, difficulty, config, analysis_results):
-    """The main training function, now correctly accepts analysis_results for reporting."""
     model_cfg = config['model_config']
-    all_historical_games = []
+    trainer_cfg = config['trainer_config']
     
-    data_dir = f"data/{difficulty}"
+    all_historical_games = []
+    # Load data from all previous generations
     for i in range(current_generation_num + 1):
-        data_path = f"{data_dir}/generation_{i}/simulation_data.json"
+        data_path = f"data/{difficulty}/generation_{i}/simulation_data.json"
         if os.path.exists(data_path):
             sim_data = load_data(data_path)
-            if sim_data:
-                all_historical_games.extend(sim_data)
-    
-    if not all_historical_games:
-        return
+            if sim_data: all_historical_games.extend(sim_data)
 
-    X, y = preprocess_training_data(all_historical_games, difficulty, config)
+    if not all_historical_games: return
+        
+    # Select the best games from the entire history
+    elite_games = get_elite_games(all_historical_games, trainer_cfg['elite_games_to_keep'])
+    if not elite_games:
+        print("No winning games found in historical data. Cannot train.")
+        return
     
-    if X is None or X.shape[0] < 2: return
+    # --- ADDED LOGGING ---
+    print(f"Training on data from {len(elite_games)} best historical games.")
+    total_turns = sum(len(g['game_history']) for g in elite_games)
+    print(f"Total training samples (turns): {total_turns}")
+    # ---------------------
+
+    X, y = preprocess_training_data(elite_games, difficulty, config)
+    if X.shape[0] < 2: return
 
     scaler = StandardScaler().fit(X)
     X_scaled = scaler.transform(X)
     
     model = MLPRegressor(
         random_state=42, 
-        max_iter=1000, 
         hidden_layer_sizes=model_cfg['hidden_layer_sizes'], 
         alpha=model_cfg['alpha'],
-        verbose=False
+        max_iter=2000
     )
-    model.fit(X_scaled, y) 
-
+    model.fit(X_scaled, y)
+        
     output_dir = f"models/{difficulty}/generation_{current_generation_num + 1}"
+    
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
     os.makedirs(output_dir, exist_ok=True)
+    
     joblib.dump(model, f"{output_dir}/pandemic_model.joblib")
     joblib.dump(scaler, f"{output_dir}/pandemic_model_scaler.joblib")
-
-    # After training, update the report with the performance of this generation.
-    update_report(current_generation_num, difficulty, analysis_results, config)
+    
+    # update_report functionality is now external to this function if needed

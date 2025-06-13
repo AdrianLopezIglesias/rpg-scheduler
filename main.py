@@ -5,21 +5,31 @@ from modules.tester import run_test, run_debug
 from modules.playback import run_gnn_playback
 from modules.utils import log
 from modules.rl_trainer import run_rl_training
+from modules.debug_trainer import run_single_train_step_debug
 
 def main():
+    """
+    Main entry point for the Pandemic AI CLI.
+    """
     parser = argparse.ArgumentParser(description="Pandemic AI CLI")
-    parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl", "playback"], help="The action to perform.")
+    # --- NEW COMMAND ---
+    parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl", "playback", "debug_train_step"], help="The action to perform.")
     args = parser.parse_args()
+
     try:
         with open("config.json", "r") as f:
             config = json.load(f)
     except FileNotFoundError:
         log("Error: config.json not found. Please create it.")
         return
+
     if args.command == "train_rl":
         run_rl_training(config)
     elif args.command == "playback":
         run_gnn_playback(config)
+    # --- NEW COMMAND HANDLER ---
+    elif args.command == "debug_train_step":
+        run_single_train_step_debug(config)
     elif args.command == "train":
         log("Running original supervised training loop.")
         run_training_loop(config)

@@ -1,30 +1,26 @@
 import os
 import json
-from pandemic_game import PandemicGame
+from game.pandemic_game import PandemicGame
 from agents.agents import RandomAgent, NNAgent
 
-def run_simulation(agent, num_games, output_path):
-    """
-    Runs games and saves them in the new format: a list of full game objects.
-    """
-    game = PandemicGame()
+def run_simulation(agent, num_games, output_path, difficulty="easy"):
+    game = PandemicGame(difficulty=difficulty)
     all_games_played = []
     
-    print(f"Running {num_games} games with {agent.__class__.__name__}...")
+    print(f"Running {num_games} games with {agent.__class__.__name__} on '{difficulty}' map...")
 
     for i in range(num_games):
         game_history = []
         state = game.reset()
         
-        for _ in range(game.max_actions_per_game):
+        while True:
             game_over_status = game.is_game_over()
             if game_over_status:
                 break
 
             possible_actions = game.get_possible_actions()
-            chosen_action = agent.choose_action(state, possible_actions)
+            chosen_action = agent.choose_action(game, possible_actions)
             
-            # Log the state *before* the action is taken
             game_history.append({
                 "state": state,
                 "action_taken": chosen_action
@@ -32,7 +28,6 @@ def run_simulation(agent, num_games, output_path):
             
             state = game.step(chosen_action)
 
-        # After the game is over, save the entire game as one object
         all_games_played.append({
             "game_history": game_history,
             "final_result": game.is_game_over(),

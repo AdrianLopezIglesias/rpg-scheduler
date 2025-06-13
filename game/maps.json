@@ -1,0 +1,31 @@
+{
+  "easy": {
+    "cities": {
+      "Atlanta": {"neighbors": ["Chicago", "Washington"]},
+      "Chicago": {"neighbors": ["Atlanta", "Montreal"]},
+      "Washington": {"neighbors": ["Atlanta", "New York"]},
+      "Montreal": {"neighbors": ["Chicago", "New York"]},
+      "New York": {"neighbors": ["Washington", "Montreal"]}
+    }
+  },
+  "hard": {
+    "cities": {
+      "San Francisco": {"neighbors": ["Chicago", "Los Angeles", "Tokyo", "Manila"]},
+      "Chicago": {"neighbors": ["San Francisco", "Los Angeles", "Mexico City", "Atlanta", "Montreal"]},
+      "Atlanta": {"neighbors": ["Chicago", "Washington", "Miami"]},
+      "Montreal": {"neighbors": ["Chicago", "Washington", "New York"]},
+      "Washington": {"neighbors": ["Atlanta", "Montreal", "New York", "Miami"]},
+      "New York": {"neighbors": ["Montreal", "Washington", "London", "Madrid"]},
+      "Los Angeles": {"neighbors": ["San Francisco", "Chicago", "Mexico City", "Sydney"]},
+      "Mexico City": {"neighbors": ["Los Angeles", "Chicago", "Miami", "Lima", "Bogota"]},
+      "Miami": {"neighbors": ["Atlanta", "Mexico City", "Washington", "Bogota"]},
+      "Tokyo": {"neighbors": ["San Francisco"]},
+      "Manila": {"neighbors": ["San Francisco"]},
+      "London": {"neighbors": ["New York"]},
+      "Madrid": {"neighbors": ["New York"]},
+      "Sydney": {"neighbors": ["Los Angeles"]},
+      "Lima": {"neighbors": ["Mexico City"]},
+      "Bogota": {"neighbors": ["Mexico City", "Miami"]}
+    }
+  }
+}

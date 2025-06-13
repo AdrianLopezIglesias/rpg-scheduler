@@ -2,77 +2,86 @@ import random
 import json
 import joblib
 import numpy as np
-import os
+import copy
 
-def flatten_state_for_nn(state, city_encoder):
-    """Converts the nested state dictionary into a flat numerical vector for the NN."""
-    board_state = state['board']
-    cube_features = [board_state.get(city, {}).get('cubes', 0) for city in city_encoder.classes_]
-    player_location_encoded = city_encoder.transform([state['player_location']])[0]
-    features = cube_features + [player_location_encoded, state['actions_taken']]
+def create_feature_vector(game_state, game):
+    """Creates the 'Threat-Aware' feature vector from a given game state."""
+    features = []
+    player_loc = game_state['player_location']
+    board = game_state['board']
+    
+    features.append(board[player_loc]['cubes'])
+    neighbors1 = sorted(game.map[player_loc]['neighbors'])
+    for i in range(4): # This can stay at 4 as it's part of the feature vector's fixed size
+        features.append(board[neighbors1[i]]['cubes'] if i < len(neighbors1) else 0)
+
+    neighbors2_set = set(n2 for n1 in neighbors1 for n2 in game.map[n1]['neighbors'])
+    neighbors2 = sorted(list(neighbors2_set - set(neighbors1) - {player_loc}))
+    for i in range(8):
+        features.append(board[neighbors2[i]]['cubes'] if i < len(neighbors2) else 0)
+        
+    neighbors3_set = set(n3 for n2 in neighbors2 for n3 in game.map[n2]['neighbors'])
+    neighbors3 = sorted(list(neighbors3_set - set(neighbors2) - set(neighbors1) - {player_loc}))
+    for i in range(16):
+        features.append(board[neighbors3[i]]['cubes'] if i < len(neighbors3) else 0)
+
+    features.append(sum(c['cubes'] for c in board.values()))
+    danger_cities = [city for city, data in board.items() if data['cubes'] == 3]
+    features.append(len(danger_cities))
+    features.append(min([game.get_distance(player_loc, c) for c in danger_cities]) if danger_cities else -1)
+    
     return np.array(features).reshape(1, -1)
 
 
 class Agent:
-    """Base class for all agents."""
-    def choose_action(self, game_state, possible_actions):
+    def choose_action(self, game, possible_actions):
         raise NotImplementedError
 
 class RandomAgent(Agent):
-    """An agent that chooses its action randomly."""
-    def choose_action(self, game_state, possible_actions):
+    def choose_action(self, game, possible_actions):
         return random.choice(possible_actions)
 
 class NNAgent(Agent):
-    """An agent that uses a trained Neural Network to choose an action."""
-    def __init__(self, model_path_prefix):
-        """Loads a trained model and its associated transformers."""
+    """An agent that uses a model to predict a score for each possible generic action."""
+    def __init__(self, model_path_prefix, epsilon=0.1):
+        self.epsilon = epsilon
         try:
             self.model = joblib.load(f"{model_path_prefix}.joblib")
             self.scaler = joblib.load(f"{model_path_prefix}_scaler.joblib")
-            self.city_encoder = joblib.load(f"{model_path_prefix}_city_encoder.joblib")
-            self.action_encoder = joblib.load(f"{model_path_prefix}_action_encoder.joblib")
-        except FileNotFoundError as e:
-            print(f"Error: Could not load model from {model_path_prefix}. File not found: {e.filename}")
+        except FileNotFoundError:
             self.model = None
 
-    def choose_action(self, game_state, possible_actions):
-        """
-        An optimized method to choose an action by only evaluating the probabilities
-        of currently valid moves.
-        """
+    def choose_action(self, game, possible_actions):
         if not self.model:
             return random.choice(possible_actions)
 
-        # 1. Preprocess the current game state
-        flat_state = flatten_state_for_nn(game_state, self.city_encoder)
-        scaled_state = self.scaler.transform(flat_state)
-        
-        # 2. Get action probabilities for ALL known actions just once
-        action_probabilities = self.model.predict_proba(scaled_state)[0]
-        
-        # 3. Create a fast lookup map of {encoded_action: probability}
-        # This maps the integer label of an action to its predicted probability.
-        prob_map = {action: prob for action, prob in zip(self.model.classes_, action_probabilities)}
+        if random.random() < self.epsilon:
+            return random.choice(possible_actions)
 
-        # 4. Find the best VALID action efficiently
+        feature_vector = create_feature_vector(game.get_state_snapshot(), game)
+        scaled_features = self.scaler.transform(feature_vector)
+        action_scores = self.model.predict(scaled_features)[0]
+
         best_action = None
-        max_prob = -1
+        best_score = -float('inf')
         
-        # Iterate through only the few currently possible actions
-        for action in possible_actions:
-            action_str = json.dumps(action, sort_keys=True)
+        # Action 0: Treat
+        action_treat = {"type": "treat", "target": game.player_location}
+        if action_treat in possible_actions and action_scores[0] > best_score:
+            best_score = action_scores[0]
+            best_action = action_treat
             
-            # Check if this action is one the model was trained on
-            if action_str in self.action_encoder.classes_:
-                encoded_action = self.action_encoder.transform([action_str])[0]
-                
-                # Look up the probability for this specific action
-                prob = prob_map.get(encoded_action, -1)
+        # --- FIX: Check all sorted neighbors, not just the first 4 ---
+        sorted_neighbors = sorted(game.map[game.player_location]['neighbors'])
+        for i, neighbor in enumerate(sorted_neighbors):
+            # The model's output for moves starts at index 1
+            action_score_index = i + 1
+            # Ensure we don't go out of bounds of the model's output layer
+            if action_score_index < len(action_scores):
+                score_move = action_scores[action_score_index]
+                action_move = {"type": "move", "target": neighbor}
+                if action_move in possible_actions and score_move > best_score:
+                    best_score = score_move
+                    best_action = action_move
 
-                if prob > max_prob:
-                    max_prob = prob
-                    best_action = action
-
-        # Fallback to random if no known valid action is found
         return best_action if best_action else random.choice(possible_actions)

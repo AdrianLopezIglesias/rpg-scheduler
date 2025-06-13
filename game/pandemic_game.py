@@ -1,50 +1,61 @@
 import random
 import json
+import os
+from collections import deque
 
 class PandemicGame:
     """
-    The game environment, now with a larger, more complex map and a more
-    challenging initial setup to test the agent's strategic capabilities.
+    The game environment, now loading its map from an external config file.
+    This allows for different levels of difficulty and complexity.
     """
-    def __init__(self):
-        self.map = self._create_map()
-        self.max_actions_per_game = 250
+    def __init__(self, difficulty="easy"):
+        self.map_config = self._load_map_config(difficulty)
+        self.map = self.map_config["cities"]
+        self.max_actions_per_game = 1000
         self.all_cities = list(self.map.keys())
+        self.distances = self._precompute_distances()
         self.reset()
 
-    def _create_map(self):
-        """The full-size map, restored to increase game complexity."""
-        return {
-            "San Francisco": {"color": "blue", "neighbors": ["Chicago", "Los Angeles", "Tokyo", "Manila"]},
-            "Chicago": {"color": "blue", "neighbors": ["San Francisco", "Los Angeles", "Mexico City", "Atlanta", "Montreal"]},
-            "Atlanta": {"color": "blue", "neighbors": ["Chicago", "Washington", "Miami"]},
-            "Montreal": {"color": "blue", "neighbors": ["Chicago", "Washington", "New York"]},
-            "Washington": {"color": "blue", "neighbors": ["Atlanta", "Montreal", "New York", "Miami"]},
-            "New York": {"color": "blue", "neighbors": ["Montreal", "Washington", "London", "Madrid"]},
-            "Los Angeles": {"color": "blue", "neighbors": ["San Francisco", "Chicago", "Mexico City", "Sydney"]},
-            "Mexico City": {"color": "blue", "neighbors": ["Los Angeles", "Chicago", "Miami", "Lima", "Bogota"]},
-            "Miami": {"color": "blue", "neighbors": ["Atlanta", "Mexico City", "Washington", "Bogota"]},
-            "Tokyo": {"color": "red", "neighbors": ["San Francisco"]},
-            "Manila": {"color": "red", "neighbors": ["San Francisco"]},
-            "London": {"color": "blue", "neighbors": ["New York"]},
-            "Madrid": {"color": "blue", "neighbors": ["New York"]},
-            "Sydney": {"color": "red", "neighbors": ["Los Angeles"]},
-            "Lima": {"color": "yellow", "neighbors": ["Mexico City"]},
-            "Bogota": {"color": "yellow", "neighbors": ["Mexico City", "Miami"]},
-        }
+    def _load_map_config(self, difficulty):
+        """Loads the map data for the specified difficulty from the JSON file."""
+        config_path = os.path.join(os.path.dirname(__file__), 'maps.json')
+        with open(config_path, 'r') as f:
+            all_maps = json.load(f)
+        return all_maps[difficulty]
+
+    def _precompute_distances(self):
+        """Calculates the shortest path between all cities using BFS."""
+        distances = {}
+        for start_node in self.all_cities:
+            distances[start_node] = {node: float('inf') for node in self.all_cities}
+            distances[start_node][start_node] = 0
+            queue = deque([start_node])
+            visited = {start_node}
+            
+            while queue:
+                current_node = queue.popleft()
+                for neighbor in self.map[current_node]["neighbors"]:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        distances[start_node][neighbor] = distances[start_node][current_node] + 1
+                        queue.append(neighbor)
+        return distances
+
+    def get_distance(self, city1, city2):
+        return self.distances[city1].get(city2, float('inf'))
 
     def reset(self):
         """Resets the game to a new, random initial state."""
         self.board_state = {city: {"cubes": 0} for city in self.map}
-        self.player_location = "Atlanta"
+        self.player_location = random.choice(self.all_cities)
         self.actions_taken = 0
         self._setup_initial_board()
         return self.get_state_snapshot()
 
     def _setup_initial_board(self):
-        """Creates a more difficult starting board state."""
-        # Increased number of cubes to create a more challenging start.
-        num_cubes_to_place = random.randint(25, 40)
+        """Creates a new, random puzzle for the agent to solve."""
+        # Scale the number of cubes based on the number of cities in the map
+        num_cubes_to_place = random.randint(len(self.all_cities) * 2, len(self.all_cities) * 3)
         for _ in range(num_cubes_to_place):
             city = random.choice(self.all_cities)
             if self.board_state[city]["cubes"] < 3:

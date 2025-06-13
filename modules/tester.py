@@ -64,6 +64,7 @@ def debug_decision_process(game, agent):
             predicted_score = agent.model.predict(scaled_features)[0]
             print(f"  {action}, predicted future state score: {predicted_score:.2f}")
 
+    log(game.get_possible_actions())
     chosen_action = agent.choose_action(game, game.get_possible_actions())
     log(f"==> Agent's Final Decision: {chosen_action}\n")
     return chosen_action

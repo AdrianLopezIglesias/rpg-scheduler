@@ -1,4 +1,8 @@
 {
+    "playback_config": {
+        "model_path": "models/rl_gnn_model.pth",
+        "difficulty": "easy"
+    },
     "rl_config": {
         "difficulty": "tutorial",
         "learning_rate": 0.001,

@@ -1,0 +1,88 @@
+{
+    "training_run_config": {
+        "train_config": {
+            "curriculum": [
+                "easy",
+                "easy",
+                "easy",
+                "easy",
+                "easy",
+                "hard",
+                "hard",
+                "hard",
+                "hard",
+                "hard"
+            ],
+            "games_per_generation": 1000
+        },
+        "test_config": {
+            "model_training_difficulty": "easy",
+            "model_generation_to_test": 9,
+            "map_difficulty_to_test_on": "hard",
+            "num_games_to_test": 1000
+        },
+        "debug_config": {
+            "model_training_difficulty": "easy",
+            "model_generation_to_debug": 2,
+            "map_difficulty_to_debug_on": "easy"
+        },
+        "agent_config": {
+            "epsilon_start": 0.5,
+            "epsilon_end": 0.05
+        },
+        "model_config": {
+            "hidden_layer_sizes": [
+                300
+            ],
+            "alpha": 0.001
+        },
+        "trainer_config": {
+            "elite_games_to_keep": 1000
+        },
+        "game_settings": {
+            "easy": {
+                "max_actions_per_game": 50
+            },
+            "hard": {
+                "max_actions_per_game": 100
+            }
+        }
+    },
+    "generational_results": [
+        {
+            "generation": 0,
+            "difficulty": "easy",
+            "win_rate_percent": 27.400000000000002,
+            "avg_actions_to_win": 41.9014598540146,
+            "fastest_win_actions": 20
+        },
+        {
+            "generation": 1,
+            "difficulty": "easy",
+            "win_rate_percent": 2.5,
+            "avg_actions_to_win": 42.64,
+            "fastest_win_actions": 28
+        },
+        {
+            "generation": 2,
+            "difficulty": "easy",
+            "win_rate_percent": 10.8,
+            "avg_actions_to_win": 41.2037037037037,
+            "fastest_win_actions": 24
+        },
+        {
+            "generation": 3,
+            "difficulty": "easy",
+            "win_rate_percent": 5.4,
+            "avg_actions_to_win": 41.648148148148145,
+            "fastest_win_actions": 17
+        },
+        {
+            "generation": 4,
+            "difficulty": "easy",
+            "win_rate_percent": 5.1,
+            "avg_actions_to_win": 41.666666666666664,
+            "fastest_win_actions": 28
+        }
+    ]
+}

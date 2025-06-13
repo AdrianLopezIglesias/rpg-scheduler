@@ -5,11 +5,15 @@ from collections import deque
 
 class PandemicGame:
     """
-    The game environment, now loading map and game settings from external configs.
+    The game environment, now loading its map and game settings from
+    a passed config object.
     """
-    def __init__(self, difficulty="easy"):
+    def __init__(self, difficulty="easy", config=None):
+        if not config:
+            raise ValueError("A config object must be provided to initialize the game.")
+            
         self.map_config = self._load_map_config(difficulty)
-        game_settings = self._load_game_settings(difficulty)
+        game_settings = config['game_settings'][difficulty]
 
         self.map = self.map_config["cities"]
         self.max_actions_per_game = game_settings["max_actions_per_game"]
@@ -18,16 +22,10 @@ class PandemicGame:
         self.reset()
 
     def _load_map_config(self, difficulty):
-        """Loads the map data for the specified difficulty."""
+        """Loads the map data for the specified difficulty from the JSON file."""
         config_path = os.path.join(os.path.dirname(__file__), 'maps.json')
         with open(config_path, 'r') as f:
             return json.load(f)[difficulty]
-
-    def _load_game_settings(self, difficulty):
-        """Loads game settings like max actions from the main config file."""
-        # The path is relative to the project root where main.py is run.
-        with open('config.json', 'r') as f:
-            return json.load(f)['game_settings'][difficulty]
 
     def _precompute_distances(self):
         """Calculates the shortest path between all cities using BFS."""

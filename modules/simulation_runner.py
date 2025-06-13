@@ -3,8 +3,12 @@ import json
 from game.pandemic_game import PandemicGame
 from agents.agents import RandomAgent, NNAgent
 
-def run_simulation(agent, num_games, output_path, difficulty="easy"):
-    game = PandemicGame(difficulty=difficulty)
+def run_simulation(agent, num_games, output_path, difficulty, config):
+    """
+    Runs a specified number of games using a given agent and saves the data.
+    Now passes the config object to the game instance.
+    """
+    game = PandemicGame(difficulty=difficulty, config=config)
     all_games_played = []
     
     print(f"Running {num_games} games with {agent.__class__.__name__} on '{difficulty}' map...")

@@ -30,7 +30,7 @@
         "epsilon_end": 0.05
     },
     "model_config": {
-        "hidden_layer_sizes": [300],
+        "hidden_layer_sizes": [300, 300],
         "alpha": 0.001
     },
     "trainer_config": {

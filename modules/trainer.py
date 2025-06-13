@@ -31,7 +31,8 @@ def preprocess_training_data(list_of_games, difficulty, config):
     print(f"Total training samples (turns): {len(training_data)}")
 
     X_list, y_list = [], []
-    game_instance_for_calcs = PandemicGame(difficulty=difficulty)
+    # Pass the config to the game instance to ensure it initializes correctly
+    game_instance_for_calcs = PandemicGame(difficulty=difficulty, config=config)
     
     for game_data in elite_games:
         score = 1000 - game_data["total_actions"]
@@ -43,7 +44,36 @@ def preprocess_training_data(list_of_games, difficulty, config):
 
     return np.array(X_list), np.array(y_list)
 
-def train_next_generation(current_generation_num, difficulty, config):
+def update_report(generation_num, difficulty, analysis_results, config):
+    """Loads, updates, and saves a JSON report of the training progress."""
+    report_path = 'training_report.json'
+    try:
+        with open(report_path, 'r') as f:
+            report = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # If no report exists, create a new one with the config.
+        report = {
+            "training_run_config": config,
+            "generational_results": []
+        }
+
+    # Add the current generation's results.
+    report_entry = {
+        "generation": generation_num,
+        "difficulty": difficulty,
+        **analysis_results  # Unpack the analysis dictionary here
+    }
+    report["generational_results"].append(report_entry)
+
+    # Sort results by generation to keep the report clean.
+    report["generational_results"].sort(key=lambda r: r['generation'])
+
+    with open(report_path, 'w') as f:
+        json.dump(report, f, indent=4)
+    print(f"Training report updated: {report_path}")
+
+def train_next_generation(current_generation_num, difficulty, config, analysis_results):
+    """The main training function, now correctly accepts analysis_results for reporting."""
     model_cfg = config['model_config']
     all_historical_games = []
     
@@ -78,3 +108,6 @@ def train_next_generation(current_generation_num, difficulty, config):
     os.makedirs(output_dir, exist_ok=True)
     joblib.dump(model, f"{output_dir}/pandemic_model.joblib")
     joblib.dump(scaler, f"{output_dir}/pandemic_model_scaler.joblib")
+
+    # After training, update the report with the performance of this generation.
+    update_report(current_generation_num, difficulty, analysis_results, config)

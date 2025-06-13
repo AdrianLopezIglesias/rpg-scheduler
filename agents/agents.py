@@ -100,7 +100,7 @@ class NNAgent(Agent):
             
             predicted_score = self.model.predict(scaled_features)[0]
             
-            if predicted_score > best_predicted_score:
+            if predicted_score < best_predicted_score:
                 best_predicted_score = predicted_score
                 best_action = action
         

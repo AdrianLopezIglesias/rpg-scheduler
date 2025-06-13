@@ -54,7 +54,7 @@ def debug_decision_process(game, agent):
     """Analyzes and prints the agent's decision-making process for a single turn."""
     state = game.get_state_snapshot()
     log(f"--- Turn {state['actions_taken']} | Player at: {state['player_location']} ---")
-    
+    log(state)
     if isinstance(agent, NNAgent) and agent.model:
         log("Evaluating possible actions...")
         for action in game.get_possible_actions():
@@ -62,7 +62,7 @@ def debug_decision_process(game, agent):
             future_feature_vector = create_feature_vector(future_state, game)
             scaled_features = agent.scaler.transform(future_feature_vector)
             predicted_score = agent.model.predict(scaled_features)[0]
-            print(f"    - If action is {action}, predicted future state score: {predicted_score:.2f}")
+            print(f"  {action}, predicted future state score: {predicted_score:.2f}")
 
     chosen_action = agent.choose_action(game, game.get_possible_actions())
     log(f"==> Agent's Final Decision: {chosen_action}\n")

@@ -20,7 +20,7 @@
 		"server.php": true,
 		".rfcs": true,
 		".es**": true,
-		".git**": false,
+		".git**": true,
 		".tool**": true,
 		".jshi**": true,
 		"**.sh": true,

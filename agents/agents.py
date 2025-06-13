@@ -1,18 +1,19 @@
 import random
-import json
 import joblib
 import numpy as np
 import copy
 
 def create_feature_vector(game_state, game):
-    """Creates the 'Threat-Aware' feature vector from a given game state."""
+    """
+    Creates the 'Threat-Aware' feature vector from a given game state.
+    """
     features = []
     player_loc = game_state['player_location']
     board = game_state['board']
     
     features.append(board[player_loc]['cubes'])
     neighbors1 = sorted(game.map[player_loc]['neighbors'])
-    for i in range(4): # This can stay at 4 as it's part of the feature vector's fixed size
+    for i in range(4):
         features.append(board[neighbors1[i]]['cubes'] if i < len(neighbors1) else 0)
 
     neighbors2_set = set(n2 for n1 in neighbors1 for n2 in game.map[n1]['neighbors'])
@@ -30,6 +31,9 @@ def create_feature_vector(game_state, game):
     features.append(len(danger_cities))
     features.append(min([game.get_distance(player_loc, c) for c in danger_cities]) if danger_cities else -1)
     
+    # Add the maximum number of turns as a feature
+    features.append(game.max_actions_per_game)
+    
     return np.array(features).reshape(1, -1)
 
 
@@ -42,7 +46,10 @@ class RandomAgent(Agent):
         return random.choice(possible_actions)
 
 class NNAgent(Agent):
-    """An agent that uses a model to predict a score for each possible generic action."""
+    """
+    An agent that uses a state-value model to look one step ahead and
+    choose the action that leads to the state with the highest predicted score.
+    """
     def __init__(self, model_path_prefix, epsilon=0.1):
         self.epsilon = epsilon
         try:
@@ -51,37 +58,38 @@ class NNAgent(Agent):
         except FileNotFoundError:
             self.model = None
 
+    def _simulate_next_state(self, game, action):
+        """Creates a hypothetical future state for evaluation."""
+        sim_game = copy.deepcopy(game)
+        sim_game.step(action)
+        return sim_game.get_state_snapshot()
+
     def choose_action(self, game, possible_actions):
         if not self.model:
             return random.choice(possible_actions)
 
+        # Epsilon-Greedy Strategy: Explore or Exploit?
         if random.random() < self.epsilon:
             return random.choice(possible_actions)
-
-        feature_vector = create_feature_vector(game.get_state_snapshot(), game)
-        scaled_features = self.scaler.transform(feature_vector)
-        action_scores = self.model.predict(scaled_features)[0]
-
-        best_action = None
-        best_score = -float('inf')
         
-        # Action 0: Treat
-        action_treat = {"type": "treat", "target": game.player_location}
-        if action_treat in possible_actions and action_scores[0] > best_score:
-            best_score = action_scores[0]
-            best_action = action_treat
-            
-        # --- FIX: Check all sorted neighbors, not just the first 4 ---
-        sorted_neighbors = sorted(game.map[game.player_location]['neighbors'])
-        for i, neighbor in enumerate(sorted_neighbors):
-            # The model's output for moves starts at index 1
-            action_score_index = i + 1
-            # Ensure we don't go out of bounds of the model's output layer
-            if action_score_index < len(action_scores):
-                score_move = action_scores[action_score_index]
-                action_move = {"type": "move", "target": neighbor}
-                if action_move in possible_actions and score_move > best_score:
-                    best_score = score_move
-                    best_action = action_move
+        # Exploit: Use the model to find the best action
+        best_action = None
+        best_predicted_score = -float('inf')
 
+        for action in possible_actions:
+            # 1. Imagine the state after this action
+            future_state = self._simulate_next_state(game, action)
+            
+            # 2. Prepare the state for the model
+            feature_vector = create_feature_vector(future_state, game)
+            scaled_features = self.scaler.transform(feature_vector)
+            
+            # 3. Ask the model to predict the score of this future state
+            predicted_score = self.model.predict(scaled_features)[0]
+            
+            # 4. Keep track of the action that leads to the highest predicted score
+            if predicted_score > best_predicted_score:
+                best_predicted_score = predicted_score
+                best_action = action
+        
         return best_action if best_action else random.choice(possible_actions)

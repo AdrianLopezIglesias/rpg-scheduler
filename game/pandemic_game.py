@@ -5,23 +5,29 @@ from collections import deque
 
 class PandemicGame:
     """
-    The game environment, now loading its map from an external config file.
-    This allows for different levels of difficulty and complexity.
+    The game environment, now loading map and game settings from external configs.
     """
     def __init__(self, difficulty="easy"):
         self.map_config = self._load_map_config(difficulty)
+        game_settings = self._load_game_settings(difficulty)
+
         self.map = self.map_config["cities"]
-        self.max_actions_per_game = 1000
+        self.max_actions_per_game = game_settings["max_actions_per_game"]
         self.all_cities = list(self.map.keys())
         self.distances = self._precompute_distances()
         self.reset()
 
     def _load_map_config(self, difficulty):
-        """Loads the map data for the specified difficulty from the JSON file."""
+        """Loads the map data for the specified difficulty."""
         config_path = os.path.join(os.path.dirname(__file__), 'maps.json')
         with open(config_path, 'r') as f:
-            all_maps = json.load(f)
-        return all_maps[difficulty]
+            return json.load(f)[difficulty]
+
+    def _load_game_settings(self, difficulty):
+        """Loads game settings like max actions from the main config file."""
+        # The path is relative to the project root where main.py is run.
+        with open('config.json', 'r') as f:
+            return json.load(f)['game_settings'][difficulty]
 
     def _precompute_distances(self):
         """Calculates the shortest path between all cities using BFS."""
@@ -54,7 +60,6 @@ class PandemicGame:
 
     def _setup_initial_board(self):
         """Creates a new, random puzzle for the agent to solve."""
-        # Scale the number of cubes based on the number of cities in the map
         num_cubes_to_place = random.randint(len(self.all_cities) * 2, len(self.all_cities) * 3)
         for _ in range(num_cubes_to_place):
             city = random.choice(self.all_cities)

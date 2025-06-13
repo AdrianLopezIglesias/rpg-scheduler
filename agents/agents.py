@@ -16,6 +16,7 @@ def create_feature_vector(game_state, game):
 
     neighbors2_set = set(n2 for n1 in neighbors1 for n2 in game.map[n1]['neighbors'])
     neighbors2 = sorted(list(neighbors2_set - set(neighbors1) - {player_loc}))
+  
     for i in range(8):
         features.append(board[neighbors2[i]]['cubes'] if i < len(neighbors2) else 0)
         
@@ -26,6 +27,7 @@ def create_feature_vector(game_state, game):
 
     features.append(sum(c['cubes'] for c in board.values()))
     danger_cities = [city for city, data in board.items() if data['cubes'] == 3]
+   
     features.append(len(danger_cities))
     features.append(min([game.get_distance(player_loc, c) for c in danger_cities]) if danger_cities else -1)
     
@@ -38,7 +40,26 @@ class Agent:
 
 class RandomAgent(Agent):
     def choose_action(self, game, possible_actions):
-        return random.choice(possible_actions)
+        move_actions = [a for a in possible_actions if a['type'] == 'move']
+        treat_actions = [a for a in possible_actions if a['type'] == 'treat']
+
+        available_action_types = []
+        if move_actions:
+            available_action_types.append('move')
+        if treat_actions:
+            available_action_types.append('treat')
+
+        if not available_action_types:
+            return random.choice(possible_actions) # Fallback for 'pass' or empty list
+
+        # Choose a type of action randomly
+        chosen_type = random.choice(available_action_types)
+
+        # Choose a specific action of that type
+        if chosen_type == 'move':
+            return random.choice(move_actions)
+        else: # chosen_type == 'treat'
+            return random.choice(treat_actions)
 
 class NNAgent(Agent):
     """
@@ -55,6 +76,7 @@ class NNAgent(Agent):
 
     def _simulate_next_state(self, game, action):
         """Creates a hypothetical future state for evaluation."""
+   
         sim_game = copy.deepcopy(game)
         sim_game.step(action)
         return sim_game.get_state_snapshot()
@@ -75,6 +97,7 @@ class NNAgent(Agent):
             future_state = self._simulate_next_state(game, action)
             feature_vector = create_feature_vector(future_state, game)
             scaled_features = self.scaler.transform(feature_vector)
+            
             predicted_score = self.model.predict(scaled_features)[0]
             
             if predicted_score > best_predicted_score:

@@ -1,10 +1,37 @@
 import json
 import numpy as np
+import os
 from .simulation_runner import run_simulation
 from .analysis import analyze_generation_data
 from .utils import log
 from agents.agents import RandomAgent, NNAgent, create_feature_vector
 from game.pandemic_game import PandemicGame
+
+def validate_model(model_path_prefix, difficulty, config, target_win_rate):
+    """
+    Tests a model and returns a dictionary with analysis results.
+    The dictionary includes a 'passed' key indicating if the win rate was met.
+    """
+    log(f"  Validating model from {model_path_prefix} on '{difficulty}' map...")
+    cfg = config['champion_model_config']
+    
+    agent = NNAgent(model_path_prefix, epsilon=0)
+    default_result = {"win_rate_percent": 0, "avg_actions_to_win": "N/A", "fastest_win_actions": "N/A", "passed": False}
+
+    if not agent.model:
+        return default_result
+        
+    validation_data_path = f"data/{difficulty}/validation_run.json"
+    run_simulation(agent, cfg['games_to_validate'], validation_data_path, difficulty, config)
+    
+    try:
+        with open(validation_data_path, 'r') as f:
+            results = analyze_generation_data(json.load(f))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return default_result
+        
+    results["passed"] = results.get("win_rate_percent", 0) >= target_win_rate
+    return results
 
 def run_test(config):
     """Runs a batch test of a specified model."""
@@ -44,14 +71,14 @@ def debug_decision_process(game, agent):
 def run_debug(config):
     """Runs a single game with detailed turn-by-turn debug output."""
     cfg = config['debug_config']
-    log(f"Debugging Gen {cfg['model_generation_to_debug']} ('{cfg['model_training_difficulty']}') on '{cfg['map_difficulty_to_debug_on']}' map...")
+    log(f"Debugging Champion ('{cfg['model_training_difficulty']}') on '{cfg['map_difficulty_to_debug_on']}' map...")
     
     game = PandemicGame(difficulty=cfg['map_difficulty_to_debug_on'], config=config)
-    model_path = f"models/{cfg['model_training_difficulty']}/generation_{cfg['model_generation_to_debug']}/pandemic_model"
+    model_path = os.path.join(config['champion_model_config']['champion_model_dir'], f"{cfg['model_training_difficulty']}_champion")
     agent = NNAgent(model_path, epsilon=0)
 
     if not agent.model:
-        log("Model not found, cannot run debug session.")
+        log("Champion model not found, cannot run debug session.")
         return
 
     game.reset()

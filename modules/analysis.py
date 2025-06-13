@@ -21,5 +21,6 @@ def analyze_generation_data(list_of_games):
         "fastest_win_actions": fastest_win
     }
 
-    log(f"--- Analysis --- Win Rate: {analysis['win_rate_percent']:.2f}% | Avg. Win Speed: {analysis['avg_actions_to_win']} | Fastest Win: {analysis['fastest_win_actions']} actions")
+    avg_win_speed_formatted = f"{analysis['avg_actions_to_win']:.2f}" if isinstance(analysis['avg_actions_to_win'], float) else "N/A"
+    log(f"--- Analysis --- Win Rate: {analysis['win_rate_percent']:.2f}% | Avg. Win Speed: {avg_win_speed_formatted} | Fastest Win: {analysis['fastest_win_actions']} actions")
     return analysis

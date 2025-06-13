@@ -1,21 +1,16 @@
 {
     "train_config": {
-        "curriculum": [
-            "tutorial",
-            "tutorial",
-            "tutorial",
-            "easy",
-            "easy",
-            "easy",
-            "easy",
-            "easy",
-            "hard",
-            "hard",
-            "hard",
-            "hard",
-            "hard"
-        ],
-        "games_per_generation": 500
+        "curriculum": {
+            "tutorial": 100.0,
+            "easy": 80.0,
+            "hard": 50.0
+        },
+        "games_per_generation": 500,
+        "max_generations_per_difficulty": 10
+    },
+    "champion_model_config": {
+        "champion_model_dir": "models/champions",
+        "games_to_validate": 200
     },
     "calibrate_config": {
         "architectures_to_test": [
@@ -30,35 +25,35 @@
     },
     "test_config": {
         "model_training_difficulty": "easy",
-        "model_generation_to_test": 2,
+        "model_generation_to_test": 4,
         "map_difficulty_to_test_on": "hard",
         "num_games_to_test": 500
     },
     "debug_config": {
         "model_training_difficulty": "easy",
-        "model_generation_to_debug": 1,
-        "map_difficulty_to_debug_on": "easy"
+        "model_generation_to_debug": 4,
+        "map_difficulty_to_debug_on": "hard"
     },
     "agent_config": {
         "epsilon_start": 0.5,
         "epsilon_end": 0.05
     },
     "model_config": {
-        "hidden_layer_sizes": [100, 50],
+        "hidden_layer_sizes": [500],
         "alpha": 0.001
     },
     "trainer_config": {
-        "elite_games_to_keep": 2000
+        "elite_games_to_keep": 1500
     },
     "game_settings": {
         "tutorial": {
             "max_actions_per_game": 15
         },
         "easy": {
-            "max_actions_per_game": 50
+            "max_actions_per_game": 100
         },
         "hard": {
-            "max_actions_per_game": 300
+            "max_actions_per_game": 500
         }
     }
 }

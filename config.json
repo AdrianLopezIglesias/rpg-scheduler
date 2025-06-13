@@ -9,8 +9,8 @@
         "max_generations_per_difficulty": 10
     },
     "champion_model_config": {
-        "champion_model_dir": "models/champions",
-        "games_to_validate": 200
+        "champion_model_dir": "models",
+        "games_to_validate": 1
     },
     "calibrate_config": {
         "architectures_to_test": [
@@ -30,9 +30,9 @@
         "num_games_to_test": 500
     },
     "debug_config": {
-        "model_training_difficulty": "easy",
-        "model_generation_to_debug": 4,
-        "map_difficulty_to_debug_on": "hard"
+        "model_training_difficulty": "tutorial",
+        "model_generation_to_debug": 9,
+        "map_difficulty_to_debug_on": "tutorial"
     },
     "agent_config": {
         "epsilon_start": 0.5,

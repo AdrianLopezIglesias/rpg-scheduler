@@ -74,8 +74,10 @@ def run_debug(config):
     log(f"Debugging Champion ('{cfg['model_training_difficulty']}') on '{cfg['map_difficulty_to_debug_on']}' map...")
     
     game = PandemicGame(difficulty=cfg['map_difficulty_to_debug_on'], config=config)
-    model_path = os.path.join(config['champion_model_config']['champion_model_dir'], f"{cfg['model_training_difficulty']}_champion")
-    agent = NNAgent(model_path, epsilon=0)
+    cfg = config['debug_config']
+    candidate_model_path = f"models/{cfg['model_training_difficulty']}/candidate_gen_{cfg['model_generation_to_debug']}"
+   
+    agent = NNAgent(candidate_model_path, epsilon=0)
 
     if not agent.model:
         log("Champion model not found, cannot run debug session.")

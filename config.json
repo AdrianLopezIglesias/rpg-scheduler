@@ -1,15 +1,15 @@
 {
     "playback_config": {
-        "model_path": "models/rl_gnn_model.pth",
+        "model_path": "models/rl_gnn_model_agnostic.pth",
         "difficulty": "easy"
     },
     "rl_config": {
         "difficulty": "tutorial",
         "learning_rate": 0.001,
         "gamma": 0.99,
-        "num_episodes": 10000,
+        "num_episodes": 20000,
         "log_interval": 100,
-        "model_save_path": "models/rl_gnn_model.pth"
+        "model_save_path": "models/rl_gnn_model_agnostic.pth"
     },
     "train_config": {
         "curriculum": {

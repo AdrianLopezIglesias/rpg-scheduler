@@ -53,8 +53,8 @@ class PandemicGame:
         return self.get_state_as_graph()
 
     def _setup_initial_board(self):
-        # MODIFIED: Use a fixed number of cubes based on difficulty.
-        num_cubes_to_place = len(self.all_cities) // 2
+        # Increased the number of cubes for a harder challenge
+        num_cubes_to_place = len(self.all_cities)
         for _ in range(num_cubes_to_place):
             city = random.choice(self.all_cities)
             if self.board_state[city]["cubes"] < 3:

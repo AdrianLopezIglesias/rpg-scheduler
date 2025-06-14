@@ -6,7 +6,7 @@ from agents.agents import GNNAgent
 from .utils import log
 
 def run_rl_training(config):
-    rl_cfg = config.get('rl_config') or config.get('expert_config')
+    rl_cfg = config.get('rl_config')
     log("=============== STARTING RL TRAINING RUN ===============")
     log(f"Training on '{rl_cfg['difficulty']}' map.")
     

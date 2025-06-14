@@ -73,6 +73,7 @@
         "max_losing_games_ratio": 2.0
     },
     "game_settings": {
+        "cards_for_cure": 5,
         "tutorial": {
             "max_actions_per_game": 50
         },

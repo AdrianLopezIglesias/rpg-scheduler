@@ -6,15 +6,12 @@ from modules.playback import run_gnn_playback
 from modules.utils import log
 from modules.rl_trainer import run_rl_training
 from modules.debug_trainer import run_single_train_step_debug
-# --- NEW IMPORT ---
+# --- UPDATED IMPORT ---
 from modules.validator import run_validation
 
 def main():
-    """
-    Main entry point for the Pandemic AI CLI.
-    """
+    """Main entry point for the Pandemic AI CLI."""
     parser = argparse.ArgumentParser(description="Pandemic AI CLI")
-    # --- NEW COMMAND ---
     parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl", "playback", "debug_train_step", "validate"], help="The action to perform.")
     args = parser.parse_args()
 
@@ -31,7 +28,6 @@ def main():
         run_gnn_playback(config)
     elif args.command == "debug_train_step":
         run_single_train_step_debug(config)
-    # --- NEW COMMAND HANDLER ---
     elif args.command == "validate":
         run_validation(config)
     elif args.command == "train":

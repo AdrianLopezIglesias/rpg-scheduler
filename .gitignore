@@ -58,3 +58,11 @@ agents/__pycache__/gnn_agent.cpython-39.pyc
 agents/__pycache__/nn_agent.cpython-39.pyc
 agents/__pycache__/random_agent.cpython-39.pyc
 game/__pycache__/pandemic_game.cpython-39.pyc
+modules/__pycache__/debug_trainer.cpython-39.pyc
+modules/__pycache__/playback.cpython-39.pyc
+modules/__pycache__/rl_trainer.cpython-39.pyc
+modules/__pycache__/validator.cpython-39.pyc
+modules/__pycache__/debug_trainer.cpython-39.pyc
+modules/__pycache__/playback.cpython-39.pyc
+modules/__pycache__/rl_trainer.cpython-39.pyc
+modules/__pycache__/validator.cpython-39.pyc

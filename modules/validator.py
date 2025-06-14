@@ -1,7 +1,9 @@
+
 import torch
 import numpy as np
 from game.pandemic_game import PandemicGame
-from agents.agents import GNNAgent
+# --- UPDATED IMPORT ---
+from agents import GNNAgent
 from .utils import log
 
 def run_validation(config):
@@ -16,7 +18,8 @@ def run_validation(config):
 
     # 1. Initialization
     env = PandemicGame(difficulty=val_cfg['difficulty'], config=config)
-    input_dim = 2
+    # --- FIXED: Get input dimension dynamically from the environment ---
+    input_dim = env.get_node_feature_count()
     agent = GNNAgent(input_dim=input_dim, config=config)
 
     try:
@@ -55,4 +58,3 @@ def run_validation(config):
     log(f"Fastest Win: {fastest_win} actions")
     log(f"Average Win Speed: {avg_win_speed:.2f} actions" if isinstance(avg_win_speed, float) else "N/A")
     log("================================================")
-

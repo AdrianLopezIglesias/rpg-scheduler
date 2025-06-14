@@ -52,3 +52,9 @@ reports/training_report_2025-06-13_11-52-01.json
 reports/training_report_2025-06-13_12-23-42.json
 reports/training_report_2025-06-13_12-26-30.json
 agents/__pycache__/agents.cpython-39.pyc
+agents/__pycache__/__init__.cpython-39.pyc
+agents/__pycache__/base_agent.cpython-39.pyc
+agents/__pycache__/gnn_agent.cpython-39.pyc
+agents/__pycache__/nn_agent.cpython-39.pyc
+agents/__pycache__/random_agent.cpython-39.pyc
+game/__pycache__/pandemic_game.cpython-39.pyc

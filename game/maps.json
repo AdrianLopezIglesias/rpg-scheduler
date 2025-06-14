@@ -1,26 +1,52 @@
 {
     "tutorial": {
         "cities": {
-            "Atlanta": { "neighbors": ["Chicago", "Washington"] },
-            "Chicago": { "neighbors": ["Atlanta", "Washington"] },
-            "Washington": { "neighbors": ["Atlanta", "Chicago"] }
+            "Atlanta": {
+                "color": "blue",
+                "neighbors": ["Chicago", "Washington"]
+            },
+            "Chicago": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "Washington"]
+            },
+            "Washington": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "Chicago"]
+            }
         }
     },
     "easy": {
         "cities": {
-            "Atlanta": { "neighbors": ["Chicago", "Washington"] },
-            "Chicago": { "neighbors": ["Atlanta", "Montreal"] },
-            "Washington": { "neighbors": ["Atlanta", "New York"] },
-            "Montreal": { "neighbors": ["Chicago", "New York"] },
-            "New York": { "neighbors": ["Washington", "Montreal"] }
+            "Atlanta": {
+                "color": "blue",
+                "neighbors": ["Chicago", "Washington"]
+            },
+            "Chicago": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "Montreal"]
+            },
+            "Washington": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "New York"]
+            },
+            "Montreal": {
+                "color": "blue",
+                "neighbors": ["Chicago", "New York"]
+            },
+            "New York": {
+                "color": "blue",
+                "neighbors": ["Washington", "Montreal"]
+            }
         }
     },
     "hard": {
         "cities": {
             "San Francisco": {
+                "color": "blue",
                 "neighbors": ["Chicago", "Los Angeles", "Tokyo", "Manila"]
             },
             "Chicago": {
+                "color": "blue",
                 "neighbors": [
                     "San Francisco",
                     "Los Angeles",
@@ -29,15 +55,24 @@
                     "Montreal"
                 ]
             },
-            "Atlanta": { "neighbors": ["Chicago", "Washington", "Miami"] },
-            "Montreal": { "neighbors": ["Chicago", "Washington", "New York"] },
+            "Atlanta": {
+                "color": "blue",
+                "neighbors": ["Chicago", "Washington", "Miami"]
+            },
+            "Montreal": {
+                "color": "blue",
+                "neighbors": ["Chicago", "Washington", "New York"]
+            },
             "Washington": {
+                "color": "blue",
                 "neighbors": ["Atlanta", "Montreal", "New York", "Miami"]
             },
             "New York": {
+                "color": "blue",
                 "neighbors": ["Montreal", "Washington", "London", "Madrid"]
             },
             "Los Angeles": {
+                "color": "yellow",
                 "neighbors": [
                     "San Francisco",
                     "Chicago",
@@ -46,6 +81,7 @@
                 ]
             },
             "Mexico City": {
+                "color": "yellow",
                 "neighbors": [
                     "Los Angeles",
                     "Chicago",
@@ -55,15 +91,19 @@
                 ]
             },
             "Miami": {
+                "color": "yellow",
                 "neighbors": ["Atlanta", "Mexico City", "Washington", "Bogota"]
             },
-            "Tokyo": { "neighbors": ["San Francisco"] },
-            "Manila": { "neighbors": ["San Francisco"] },
-            "London": { "neighbors": ["New York"] },
-            "Madrid": { "neighbors": ["New York"] },
-            "Sydney": { "neighbors": ["Los Angeles"] },
-            "Lima": { "neighbors": ["Mexico City"] },
-            "Bogota": { "neighbors": ["Mexico City", "Miami"] }
+            "Tokyo": { "color": "red", "neighbors": ["San Francisco"] },
+            "Manila": { "color": "red", "neighbors": ["San Francisco"] },
+            "London": { "color": "blue", "neighbors": ["New York"] },
+            "Madrid": { "color": "blue", "neighbors": ["New York"] },
+            "Sydney": { "color": "yellow", "neighbors": ["Los Angeles"] },
+            "Lima": { "color": "yellow", "neighbors": ["Mexico City"] },
+            "Bogota": {
+                "color": "yellow",
+                "neighbors": ["Mexico City", "Miami"]
+            }
         }
     }
 }

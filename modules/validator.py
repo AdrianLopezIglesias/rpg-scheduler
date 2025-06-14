@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from game.pandemic_game import PandemicGame
 # --- UPDATED IMPORT ---
-from agents import GNNAgent
+from agents.agents import GNNAgent
 from .utils import log
 
 def run_validation(config):

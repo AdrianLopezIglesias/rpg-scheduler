@@ -2,7 +2,7 @@ import torch
 from torch.distributions import Categorical
 from game.pandemic_game import PandemicGame
 # --- UPDATED IMPORT ---
-from agents import GNNAgent
+from agents.agents import GNNAgent
 from .utils import log
 
 def run_gnn_playback(config):

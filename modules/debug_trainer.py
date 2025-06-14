@@ -3,7 +3,7 @@ from torch.distributions import Categorical
 import numpy as np
 from game.pandemic_game import PandemicGame
 # --- UPDATED IMPORT ---
-from agents import GNNAgent
+from agents.agents import GNNAgent
 from modules.utils import log
 import textwrap
 

@@ -1,10 +1,10 @@
 {
     "playback_config": {
-        "model_path": "models/rl_gnn_model_hard_continued.pth",
+        "model_path": "models/rl_gnn_model_easy_phase2.pth",
         "difficulty": "hard"
     },
     "validation_config": {
-        "model_path": "models/rl_gnn_model_easy_expert_phase1.pth",
+        "model_path": "models/rl_gnn_model_easy_phase2.pth",
         "difficulty": "hard",
         "num_games": 100
     },
@@ -17,9 +17,8 @@
         "gamma": 0.99,
         "num_episodes": 1000,
         "log_interval": 1000,
-        "load_model_path_x": "models/rl_gnn_model_easy_continued.pth",
-        "load_model_path": "models/rl_gnn_model_tutorial_expert_phase1.pth",
-        "model_save_path": "models/rl_gnn_model_easy_expert_phase1.pth"
+        "load_model_path": "models/rl_gnn_model_tutorial_phase2.pth",
+        "model_save_path": "models/rl_gnn_model_easy_phase2.pth"
     },
     "train_config": {
         "curriculum": {
@@ -80,8 +79,11 @@
         "easy": {
             "max_actions_per_game": 100
         },
+        "normal": {
+            "max_actions_per_game": 200
+        },
         "hard": {
-            "max_actions_per_game": 500
+            "max_actions_per_game": 10
         }
     }
 }

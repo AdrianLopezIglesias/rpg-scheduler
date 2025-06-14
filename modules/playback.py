@@ -1,7 +1,6 @@
 import torch
 from torch.distributions import Categorical
 from game.pandemic_game import PandemicGame
-# --- UPDATED IMPORT ---
 from agents.agents import GNNAgent
 from .utils import log
 
@@ -33,21 +32,43 @@ def run_gnn_playback(config):
         turn += 1
         log(f"\n--- Turn {turn} | Actions Taken: {env.actions_taken} ---")
         loc = env.player_location
+        cures_found = [color for color, found in env.cures.items() if found]
         cubes_data = {city: data['cubes'] for city, data in env.board_state.items()}
         non_zero_cubes = {city: {c:v for c,v in cubes.items() if v > 0} for city, cubes in cubes_data.items()}
         non_zero_cubes = {city: cubes for city, cubes in non_zero_cubes.items() if cubes}
+        
         log(f"Player is at: {loc}")
+        log(f"Cures Found: {cures_found if cures_found else 'None'}")
         log(f"Cubes on board: {non_zero_cubes if non_zero_cubes else 'None'}")
+        log(f"Player Hand: {env.player_hand}")
+
 
         with torch.no_grad():
             state.batch = torch.zeros(state.num_nodes, dtype=torch.long)
-            log("Model Evaluation:")
+            log("\nModel Evaluation:")
             node_embeddings, graph_embedding = agent.policy_network(state)
-            log("  Node Features (Cubes[b,y,k,r], Player, Cures[b,y,k,r]):")
-            for i, city in enumerate(env.all_cities):
-                log(f"    {city:<15}: {state.x[i].numpy()}")
+            
+            # Formatted Table Header
+            header = (f"{'City':<15} | {'Cubes (B,Y,K,R)':<18} | {'Cures (B,Y,K,R)':<18} | "
+                      f"{'Hand (B,Y,K,R)':<18} | {'Player':>6} | {'HasCard':>7}")
+            log(header)
+            log('-' * len(header))
 
-            log("  Action Scores:")
+            # Formatted Table Rows
+            for i, city in enumerate(env.all_cities):
+                features = state.x[i].numpy()
+                cubes_str = f"[{features[0]:.1f} {features[1]:.1f} {features[2]:.1f} {features[3]:.1f}]"
+                cures_str = f"[{int(features[4])} {int(features[5])} {int(features[6])} {int(features[7])}]"
+                hand_str = f"[{features[8]:.1f} {features[9]:.1f} {features[10]:.1f} {features[11]:.1f}]"
+                player_str = f"{int(features[12])}"
+                has_card_str = f"{int(features[13])}"
+
+                row = (f"{city:<15} | {cubes_str:<18} | {cures_str:<18} | "
+                       f"{hand_str:<18} | {player_str:>6} | {has_card_str:>7}")
+                log(row)
+
+
+            log("\nAction Scores:")
             possible_actions_mask = env.get_possible_action_mask()
             logits = torch.full_like(possible_actions_mask, -1e8, dtype=torch.float)
             
@@ -67,13 +88,13 @@ def run_gnn_playback(config):
                         score = agent.policy_network.pass_head(graph_embedding)
                     
                     logits[action_idx] = score
-                    log(f"    - Action: {action_desc}, Raw Score: {score.item():.4f}")
+                    log(f"  - Action: {action_desc}, Raw Score: {score.item():.4f}")
             
             prob_dist = Categorical(logits=logits)
             chosen_action_idx = prob_dist.sample()
             chosen_action_desc = env.idx_to_action[chosen_action_idx.item()]
 
-        log(f"==> Agent chose: {chosen_action_desc}")
+        log(f"\n==> Agent chose: {chosen_action_desc}")
         state, _, done = env.step(chosen_action_idx.item())
 
     log("\n=============== PLAYBACK FINISHED ===============")

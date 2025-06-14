@@ -4,22 +4,22 @@
         "difficulty": "hard"
     },
     "validation_config": {
-        "model_path": "models/rl_gnn_model_tutorial_expert_phase1.pth",
-        "difficulty": "easy",
+        "model_path": "models/rl_gnn_model_easy_expert_phase1.pth",
+        "difficulty": "hard",
         "num_games": 100
     },
     "debug_train_config": {
         "difficulty": "tutorial"
     },
     "rl_config": {
-        "difficulty": "tutorial",
+        "difficulty": "easy",
         "learning_rate": 0.0005,
         "gamma": 0.99,
-        "num_episodes": 20000,
+        "num_episodes": 1000,
         "log_interval": 1000,
         "load_model_path_x": "models/rl_gnn_model_easy_continued.pth",
-        "load_model_path": null,
-        "model_save_path": "models/rl_gnn_model_tutorial_expert_phase1.pth"
+        "load_model_path": "models/rl_gnn_model_tutorial_expert_phase1.pth",
+        "model_save_path": "models/rl_gnn_model_easy_expert_phase1.pth"
     },
     "train_config": {
         "curriculum": {

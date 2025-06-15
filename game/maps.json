@@ -1,5 +1,5 @@
 {
-    "tutorial": {
+    "0": {
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
         "investigation_centers": ["Atlanta"],
@@ -18,7 +18,7 @@
             }
         }
     },
-    "easy": {
+    "1": {
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
         "investigation_centers": ["Atlanta"],
@@ -45,7 +45,7 @@
             }
         }
     },
-    "normal": {
+    "2": {
         "colors_in_play": ["blue"],
         "cures_found": [],
         "investigation_centers": ["Atlanta"],
@@ -72,7 +72,7 @@
             }
         }
     },
-    "hard": {
+    "3": {
         "colors_in_play": ["blue", "yellow"],
         "cures_found": [],
         "investigation_centers": ["Atlanta"],

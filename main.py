@@ -6,15 +6,13 @@ from modules.playback import run_gnn_playback
 from modules.utils import log
 from modules.rl_trainer import run_rl_training
 from modules.debug_trainer import run_single_train_step_debug
-# --- UPDATED IMPORT ---
 from modules.validator import run_validation
+from modules.curriculum_trainer import run_curriculum_training
 
 def main():
-    """Main entry point for the Pandemic AI CLI."""
     parser = argparse.ArgumentParser(description="Pandemic AI CLI")
-    parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl", "playback", "debug_train_step", "validate"], help="The action to perform.")
+    parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl", "playback", "debug_train_step", "validate", "train_curriculum"], help="The action to perform.")
     args = parser.parse_args()
-
     try:
         with open("config.json", "r") as f:
             config = json.load(f)
@@ -22,7 +20,9 @@ def main():
         log("Error: config.json not found. Please create it.")
         return
 
-    if args.command == "train_rl":
+    if args.command == "train_curriculum":
+        run_curriculum_training(config)
+    elif args.command == "train_rl":
         run_rl_training(config)
     elif args.command == "playback":
         run_gnn_playback(config)

@@ -1,4 +1,20 @@
 {
+    "curriculum_config": {
+        "difficulties": ["0", "1", "2", "3"],
+        "targets": {
+            "0": { "target_win_rate": 95.0 },
+            "1": { "target_win_rate": 90.0 },
+            "2": { "target_win_rate": 80.0 },
+            "3": { "target_win_rate": 60.0 }
+        },
+        "max_retries": 10,
+        "model_name_prefix": "pandemic_model_curriculum",
+        "learning_rate": 0.001,
+        "gamma": 0.99,
+        "num_episodes": 2000,
+        "log_interval": 100,
+        "validation_games": 100
+    },
     "rl_config": {
         "difficulty": "tutorial",
         "learning_rate": 0.0005,
@@ -75,16 +91,16 @@
     },
     "game_settings": {
         "cards_for_cure": 5,
-        "tutorial": {
+        "0": {
             "max_actions_per_game": 50
         },
-        "easy": {
+        "1": {
             "max_actions_per_game": 100
         },
-        "normal": {
+        "2": {
             "max_actions_per_game": 200
         },
-        "hard": {
+        "3": {
             "max_actions_per_game": 500
         }
     }

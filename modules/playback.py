@@ -39,22 +39,20 @@ def run_gnn_playback(config):
         
         log(f"Player is at: {loc}")
         log(f"Cures Found: {cures_found if cures_found else 'None'}")
+        log(f"Investigation Centers: {env.investigation_centers if env.investigation_centers else 'None'}")
         log(f"Cubes on board: {non_zero_cubes if non_zero_cubes else 'None'}")
         log(f"Player Hand: {env.player_hand}")
-
 
         with torch.no_grad():
             state.batch = torch.zeros(state.num_nodes, dtype=torch.long)
             log("\nModel Evaluation:")
             node_embeddings, graph_embedding = agent.policy_network(state)
             
-            # Formatted Table Header
-            header = (f"{'City':<15} | {'Cubes (B,Y,K,R)':<18} | {'Cures (B,Y,K,R)':<18} | "
-                      f"{'Hand (B,Y,K,R)':<18} | {'Player':>6} | {'HasCard':>7}")
+            header = (f"{'City':<15} | {'Cubes(B,Y,K,R)':<16} | {'Cures(B,Y,K,R)':<16} | "
+                      f"{'Hand(B,Y,K,R)':<16} | {'Player':>6} | {'HasCard':>7} | {'Center':>6}")
             log(header)
             log('-' * len(header))
 
-            # Formatted Table Rows
             for i, city in enumerate(env.all_cities):
                 features = state.x[i].numpy()
                 cubes_str = f"[{features[0]:.1f} {features[1]:.1f} {features[2]:.1f} {features[3]:.1f}]"
@@ -62,11 +60,11 @@ def run_gnn_playback(config):
                 hand_str = f"[{features[8]:.1f} {features[9]:.1f} {features[10]:.1f} {features[11]:.1f}]"
                 player_str = f"{int(features[12])}"
                 has_card_str = f"{int(features[13])}"
+                has_center_str = f"{int(features[14])}"
 
-                row = (f"{city:<15} | {cubes_str:<18} | {cures_str:<18} | "
-                       f"{hand_str:<18} | {player_str:>6} | {has_card_str:>7}")
+                row = (f"{city:<15} | {cubes_str:<16} | {cures_str:<16} | "
+                       f"{hand_str:<16} | {player_str:>6} | {has_card_str:>7} | {has_center_str:>6}")
                 log(row)
-
 
             log("\nAction Scores:")
             possible_actions_mask = env.get_possible_action_mask()
@@ -84,6 +82,8 @@ def run_gnn_playback(config):
                         color_scores = agent.policy_network.cure_head(graph_embedding)
                         color_idx = agent.colors.index(action_desc['color'])
                         score = color_scores[0, color_idx]
+                    elif action_desc.get('type') == 'build_investigation_center':
+                        score = agent.policy_network.build_head(node_embeddings[action_desc['target_idx']])
                     elif action_desc.get('type') == 'pass':
                         score = agent.policy_network.pass_head(graph_embedding)
                     

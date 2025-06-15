@@ -3,6 +3,7 @@
         "colors_in_play": ["blue"],
         "initial_cubes": { "three_cubes": 1, "two_cubes": 1, "one_cube": 1 },
         "cures_found": ["blue"],
+        "investigation_centers": ["Atlanta"],
         "cities": {
             "Atlanta": {
                 "color": "blue",
@@ -22,6 +23,7 @@
         "colors_in_play": ["blue"],
         "initial_cubes": { "three_cubes": 2, "two_cubes": 2, "one_cube": 1 },
         "cures_found": ["blue"],
+        "investigation_centers": ["Atlanta"],
         "cities": {
             "Atlanta": {
                 "color": "blue",
@@ -49,6 +51,7 @@
         "colors_in_play": ["blue"],
         "initial_cubes": { "three_cubes": 2, "two_cubes": 2, "one_cube": 1 },
         "cures_found": [],
+        "investigation_centers": ["Atlanta"],
         "cities": {
             "Atlanta": {
                 "color": "blue",
@@ -74,8 +77,9 @@
     },
     "hard": {
         "colors_in_play": ["blue", "yellow"],
-        "initial_cubes": { "three_cubes": 3, "two_cubes": 3, "one_cube": 3 },
+        "initial_cubes": { "three_cubes": 6, "two_cubes": 3, "one_cube": 3 },
         "cures_found": [],
+        "investigation_centers": ["Atlanta"],
         "cities": {
             "San Francisco": {
                 "color": "blue",
@@ -91,6 +95,10 @@
                     "Montreal"
                 ]
             },
+            "Washington": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "New York", "Montreal"]
+            },
             "Atlanta": {
                 "color": "blue",
                 "neighbors": ["Chicago", "Washington", "Miami"]
@@ -98,10 +106,6 @@
             "Montreal": {
                 "color": "blue",
                 "neighbors": ["Chicago", "Washington", "New York"]
-            },
-            "Washington": {
-                "color": "blue",
-                "neighbors": ["Atlanta", "Montreal", "New York", "Miami"]
             },
             "New York": {
                 "color": "blue",

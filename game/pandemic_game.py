@@ -43,7 +43,9 @@ class PandemicGame:
         
         self.board_state = {city: {"cubes": {color: 0 for color in self.all_possible_colors}} for city in self.map}
         
-        # Set up cures based on the new `cures_found` config.
+        # Add investigation centers
+        self.investigation_centers = set(self.map_config.get("investigation_centers", []))
+
         self.cures = {color: False for color in self.all_possible_colors}
         cures_already_found = self.map_config.get("cures_found", [])
         for color in cures_already_found:
@@ -55,26 +57,19 @@ class PandemicGame:
         return self.get_state_as_graph()
 
     def _setup_initial_board(self):
-        # Read the cube setup from the map configuration
         cube_config = self.map_config.get("initial_cubes", {})
-        
-        # Create a shuffled list of cities to draw from without replacement
         cities_to_infect = list(self.all_cities)
         random.shuffle(cities_to_infect)
 
-        # Helper function to place cubes
         def place_cubes(num_cities, num_cubes):
             for _ in range(num_cities):
                 if not cities_to_infect:
-                    # Stop if we run out of cities
                     break
                 city_name = cities_to_infect.pop(0)
                 city_color = self.map[city_name]['color']
-                # Only place cubes if the color is active for this difficulty
                 if city_color in self.colors_in_play:
                     self.board_state[city_name]["cubes"][city_color] = num_cubes
         
-        # Place cubes according to the configuration
         place_cubes(cube_config.get("three_cubes", 0), 3)
         place_cubes(cube_config.get("two_cubes", 0), 2)
         place_cubes(cube_config.get("one_cube", 0), 1)
@@ -116,6 +111,12 @@ class PandemicGame:
                 cards_to_discard = cards_of_color[:self.cards_for_cure]
                 for card in cards_to_discard:
                     self.player_hand.remove(card)
+        elif action_type == "build_investigation_center":
+            city_to_build_in = self.idx_to_city[action["target_idx"]]
+            if city_to_build_in not in self.investigation_centers:
+                self.investigation_centers.add(city_to_build_in)
+                self.player_hand.remove(city_to_build_in)
+
 
         self.actions_taken += 1
         
@@ -141,38 +142,44 @@ class PandemicGame:
             city_name = self.idx_to_city[i]
             is_player = 1.0 if i == player_loc_idx else 0.0
             has_card = 1.0 if city_name in self.player_hand else 0.0
+            has_center = 1.0 if city_name in self.investigation_centers else 0.0
             city_cubes = self.board_state[city_name]["cubes"]
             
             cube_features = [city_cubes[c] / 3.0 for c in self.all_possible_colors]
             cure_features = [1.0 if self.cures[c] else 0.0 for c in self.all_possible_colors]
             hand_features = [hand_colors.get(c, 0) / self.cards_for_cure for c in self.all_possible_colors]
             
-            features = cube_features + cure_features + hand_features + [is_player, has_card]
+            features = cube_features + cure_features + hand_features + [is_player, has_card, has_center]
             node_features.append(features)
 
         x = torch.tensor(node_features, dtype=torch.float)
         return Data(x=x, edge_index=self.edge_index)
 
     def get_node_feature_count(self):
-        return len(self.all_possible_colors) * 3 + 2
+        return len(self.all_possible_colors) * 3 + 3 # Cubes, Cures, Hand, Player, HasCard, HasCenter
 
     def _build_action_maps(self):
         self.action_to_idx = {}
         self.idx_to_action = {}
         action_idx_counter = 0
+        # Move
         for i in range(len(self.all_cities)):
             self.action_to_idx[json.dumps({"type": "move", "target_idx": i})] = action_idx_counter
-            self.idx_to_action[action_idx_counter] = {"type": "move", "target_idx": i}
-            action_idx_counter += 1
+            self.idx_to_action[action_idx_counter] = {"type": "move", "target_idx": i}; action_idx_counter += 1
+        # Treat
         for i in range(len(self.all_cities)):
             for color in self.all_possible_colors:
                 self.action_to_idx[json.dumps({"type": "treat", "target_idx": i, "color": color})] = action_idx_counter
-                self.idx_to_action[action_idx_counter] = {"type": "treat", "target_idx": i, "color": color}
-                action_idx_counter += 1
+                self.idx_to_action[action_idx_counter] = {"type": "treat", "target_idx": i, "color": color}; action_idx_counter += 1
+        # Discover Cure
         for color in self.all_possible_colors:
             self.action_to_idx[json.dumps({"type": "discover_cure", "color": color})] = action_idx_counter
-            self.idx_to_action[action_idx_counter] = {"type": "discover_cure", "color": color}
-            action_idx_counter += 1
+            self.idx_to_action[action_idx_counter] = {"type": "discover_cure", "color": color}; action_idx_counter += 1
+        # Build Investigation Center
+        for i in range(len(self.all_cities)):
+            self.action_to_idx[json.dumps({"type": "build_investigation_center", "target_idx": i})] = action_idx_counter
+            self.idx_to_action[action_idx_counter] = {"type": "build_investigation_center", "target_idx": i}; action_idx_counter += 1
+        # Pass
         self.action_to_idx[json.dumps({"type": "pass"})] = action_idx_counter
         self.idx_to_action[action_idx_counter] = {"type": "pass"}
 
@@ -180,18 +187,23 @@ class PandemicGame:
         mask = [False] * len(self.action_to_idx)
         player_loc_idx = self.city_to_idx[self.player_location]
 
+        # Move
         for neighbor in self.map[self.player_location]["neighbors"]:
             neighbor_idx = self.city_to_idx[neighbor]
             mask[self.action_to_idx[json.dumps({"type": "move", "target_idx": neighbor_idx})]] = True
-
+        # Treat
         for color in self.colors_in_play:
             if self.board_state[self.player_location]["cubes"][color] > 0:
                 mask[self.action_to_idx[json.dumps({"type": "treat", "target_idx": player_loc_idx, "color": color})]] = True
-        
-        hand_colors = Counter(self.map[card]['color'] for card in self.player_hand)
-        for color in self.colors_in_play:
-            if not self.cures[color] and hand_colors.get(color, 0) >= self.cards_for_cure:
-                mask[self.action_to_idx[json.dumps({"type": "discover_cure", "color": color})]] = True
+        # Discover Cure (must be at a center)
+        if self.player_location in self.investigation_centers:
+            hand_colors = Counter(self.map[card]['color'] for card in self.player_hand)
+            for color in self.colors_in_play:
+                if not self.cures[color] and hand_colors.get(color, 0) >= self.cards_for_cure:
+                    mask[self.action_to_idx[json.dumps({"type": "discover_cure", "color": color})]] = True
+        # Build Investigation Center
+        if self.player_location not in self.investigation_centers and self.player_location in self.player_hand:
+            mask[self.action_to_idx[json.dumps({"type": "build_investigation_center", "target_idx": player_loc_idx})]] = True
 
         if not any(mask):
             mask[self.action_to_idx[json.dumps({"type": "pass"})]] = True
@@ -202,5 +214,8 @@ class PandemicGame:
         edge_list = []
         for city, data in self.map.items():
             for neighbor in data["neighbors"]:
+                if neighbor not in self.city_to_idx:
+                    print(f"\n### DATA INCONSISTENCY WARNING: City '{city}' lists neighbor '{neighbor}' which is not defined on this map. Skipping connection.")
+                    continue
                 edge_list.append([self.city_to_idx[city], self.city_to_idx[neighbor]])
         self.edge_index = torch.tensor(edge_list, dtype=torch.long).t().contiguous()

@@ -1,7 +1,6 @@
 {
     "tutorial": {
         "colors_in_play": ["blue"],
-        "initial_cubes": { "three_cubes": 1, "two_cubes": 1, "one_cube": 1 },
         "cures_found": ["blue"],
         "investigation_centers": ["Atlanta"],
         "cities": {
@@ -21,7 +20,6 @@
     },
     "easy": {
         "colors_in_play": ["blue"],
-        "initial_cubes": { "three_cubes": 2, "two_cubes": 2, "one_cube": 1 },
         "cures_found": ["blue"],
         "investigation_centers": ["Atlanta"],
         "cities": {
@@ -49,7 +47,6 @@
     },
     "normal": {
         "colors_in_play": ["blue"],
-        "initial_cubes": { "three_cubes": 2, "two_cubes": 2, "one_cube": 1 },
         "cures_found": [],
         "investigation_centers": ["Atlanta"],
         "cities": {
@@ -77,7 +74,6 @@
     },
     "hard": {
         "colors_in_play": ["blue", "yellow"],
-        "initial_cubes": { "three_cubes": 6, "two_cubes": 3, "one_cube": 3 },
         "cures_found": [],
         "investigation_centers": ["Atlanta"],
         "cities": {
@@ -95,17 +91,13 @@
                     "Montreal"
                 ]
             },
-            "Washington": {
-                "color": "blue",
-                "neighbors": ["Atlanta", "New York", "Montreal"]
-            },
             "Atlanta": {
                 "color": "blue",
                 "neighbors": ["Chicago", "Washington", "Miami"]
             },
-            "Montreal": {
+            "Washington": {
                 "color": "blue",
-                "neighbors": ["Chicago", "Washington", "New York"]
+                "neighbors": ["Atlanta", "Montreal", "New York", "Miami"]
             },
             "New York": {
                 "color": "blue",

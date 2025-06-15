@@ -1,12 +1,12 @@
 {
     "rl_config": {
-        "difficulty": "hard",
+        "difficulty": "tutorial",
         "learning_rate": 0.0005,
         "gamma": 0.99,
-        "num_episodes": 4000,
+        "num_episodes": 1000,
         "log_interval": 100,
-        "load_model_path": "models/rl_gnn_model_hard_phase3.pth",
-        "model_save_path": "models/rl_gnn_model_hard_phase3.pth"
+        "load_model_path": null,
+        "model_save_path": "models/rl_gnn_model_tutorial_phase4.pth"
     },
     "validation_config": {
         "model_path": "models/rl_gnn_model_hard_phase3.pth",

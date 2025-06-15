@@ -46,7 +46,7 @@ def run_validation(config):
     log("\n=============== VALIDATION RESULTS ===============")
     log(f"Win Rate: {win_rate:.2f}% ({win_count}/{val_cfg['num_games']})")
     log(f"Fastest Win: {fastest_win} actions")
-    log(f"Average Win Speed: {avg_win_speed:.2f} actions" if isinstance(avg_win_speed, float) else "N/A")
+    log(f"Average Win Speed: {avg_win_speed:.2f} actions" if isinstance(avg_win_speed, float) else f"{avg_win_speed} actions")
     log("================================================")
     
     return {"win_rate_percent": win_rate, "fastest_win_actions": fastest_win, "avg_win_speed": avg_win_speed}

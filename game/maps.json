@@ -1,5 +1,6 @@
 {
     "0": {
+        "cards_for_cure": 3,
         "max_actions_per_game": 50,
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
@@ -21,6 +22,7 @@
         }
     },
     "3": {
+        "cards_for_cure": 3,
         "max_actions_per_game": 100,
         "colors_in_play": ["blue"],
         "cures_found": [],
@@ -42,6 +44,7 @@
         }
     },
     "4": {
+        "cards_for_cure": 3,
         "max_actions_per_game": 150,
         "colors_in_play": ["blue"],
         "cures_found": [],
@@ -63,6 +66,7 @@
         }
     },
     "5": {
+        "cards_for_cure": 4,
         "max_actions_per_game": 100,
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
@@ -92,6 +96,7 @@
         }
     },
     "10": {
+        "cards_for_cure": 4,
         "max_actions_per_game": 150,
         "colors_in_play": ["blue"],
         "cures_found": [],
@@ -121,6 +126,7 @@
         }
     },
     "15": {
+        "cards_for_cure": 5,
         "max_actions_per_game": 500,
         "colors_in_play": ["blue", "yellow"],
         "cures_found": [],

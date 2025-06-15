@@ -13,16 +13,16 @@ class PandemicGame:
         self.difficulty = str(difficulty)
         self.all_possible_colors = ["blue", "yellow", "black", "red"]
 
-        self.map_config = self._load_map_config(self.difficulty)
-        self.colors_in_play = self.map_config["colors_in_play"]
+ 
+        self.map_config = self._load_map_config(self.difficulty) 
+        self.colors_in_play = self.map_config["colors_in_play"] 
 
-        game_settings = config['game_settings']
-        self.cards_for_cure = game_settings['cards_for_cure']
-        self.map = self.map_config["cities"]
-        self.max_actions_per_game = self.map_config.get("max_actions_per_game", 500)
-
-        self.all_cities = list(self.map.keys())
-        self.city_to_idx = {city: i for i, city in enumerate(self.all_cities)}
+        self.cards_for_cure = self.map_config.get("cards_for_cure", 5)
+        self.map = self.map_config["cities"] 
+        self.max_actions_per_game = self.map_config.get("max_actions_per_game", 500) 
+        
+        self.all_cities = list(self.map.keys()) 
+        self.city_to_idx = {city: i for i, city in enumerate(self.all_cities)} 
         self.idx_to_city = {i: city for city, i in self.city_to_idx.items()}
 
         self._build_action_maps()
@@ -48,14 +48,15 @@ class PandemicGame:
         self.player_location = random.choice(self.all_cities)
         self.actions_taken = 0
         self.outbreaks = 0
-
-        self.deck = [city for city in self.all_cities]
+        
+        self.deck = [city for city, data in self.map.items() if data['color'] in self.colors_in_play]
         random.shuffle(self.deck)
         self.player_hand = []
-
+        
         self.board_state = {city: {"cubes": {color: 0 for color in self.all_possible_colors}} for city in self.map}
+        
         self.investigation_centers = set(self.map_config.get("investigation_centers", []))
-
+        
         self.diseases = []
         cures_already_found = self.map_config.get("cures_found", [])
         for color in self.all_possible_colors:
@@ -68,7 +69,7 @@ class PandemicGame:
                 "in_play": is_in_play,
                 "status": disease_status
             })
-
+        
         self.infection_deck = [city for city, data in self.map.items() if data['color'] in self.colors_in_play]
         random.shuffle(self.infection_deck)
         self.infection_discard = []
@@ -77,6 +78,7 @@ class PandemicGame:
         for _ in range(3): self._draw_card()
         self._update_disease_statuses()
         return self.get_state_as_graph()
+
 
     def _setup_initial_board(self):
         infection_candidates = list(self.infection_deck)

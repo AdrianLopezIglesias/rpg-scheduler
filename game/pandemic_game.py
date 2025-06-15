@@ -217,6 +217,8 @@ class PandemicGame:
         hand_colors = Counter(self.map[card]['color'] for card in self.player_hand)
 
         disease_statuses = {d['color']: d['status'] for d in self.diseases}
+        
+        norm_cards_for_cure = self.cards_for_cure / 10.0
 
         for i in range(len(self.all_cities)):
             city_name = self.idx_to_city[i]
@@ -224,20 +226,20 @@ class PandemicGame:
             has_card = 1.0 if city_name in self.player_hand else 0.0
             has_center = 1.0 if city_name in self.investigation_centers else 0.0
             city_cubes = self.board_state[city_name]["cubes"]
-
+            
             cube_features = [city_cubes[c] / 3.0 for c in self.all_possible_colors]
             cure_features = [1.0 if disease_statuses[c] in ['cured', 'eradicated'] else 0.0 for c in self.all_possible_colors]
             hand_features = [hand_colors.get(c, 0) / self.cards_for_cure for c in self.all_possible_colors]
             eradicated_features = [1.0 if disease_statuses[c] == 'eradicated' else 0.0 for c in self.all_possible_colors]
-
-            features = cube_features + cure_features + hand_features + eradicated_features + [is_player, has_card, has_center]
+            
+            features = cube_features + cure_features + hand_features + eradicated_features + [is_player, has_card, has_center, norm_cards_for_cure]
             node_features.append(features)
 
         x = torch.tensor(node_features, dtype=torch.float)
         return Data(x=x, edge_index=self.edge_index)
 
     def get_node_feature_count(self):
-        return len(self.all_possible_colors) * 4 + 3
+        return len(self.all_possible_colors) * 4 + 4
 
     def _build_action_maps(self):
         self.action_to_idx = {}

@@ -90,7 +90,5 @@
         "include_losing_games": true,
         "max_losing_games_ratio": 2.0
     },
-    "game_settings": {
-        "cards_for_cure": 5
-    }
+    "game_settings": {}
 }

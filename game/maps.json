@@ -22,7 +22,7 @@
         }
     },
     "3": {
-        "cards_for_cure": 3,
+        "cards_for_cure": 1,
         "max_actions_per_game": 100,
         "colors_in_play": ["blue"],
         "cures_found": [],

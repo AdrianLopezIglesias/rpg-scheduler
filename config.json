@@ -14,8 +14,8 @@
         "num_games": 100
     },
     "playback_config": {
-        "model_path": "models/rl_gnn_model_hard_phase3.pth",
-        "difficulty": "hard"
+        "model_path": "models/rl_gnn_model_tutorial_phase4.pth",
+        "difficulty": "tutorial"
     },
 
     "debug_train_config": {

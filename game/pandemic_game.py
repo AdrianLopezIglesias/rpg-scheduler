@@ -1,3 +1,4 @@
+# game/pandemic_game.py (Modified)
 import random
 import json
 import os
@@ -6,21 +7,24 @@ import torch
 from torch_geometric.data import Data
 
 class PandemicGame:
-    def __init__(self, difficulty="easy", config=None):
+    def __init__(self, difficulty="0", config=None):
         if not config:
             raise ValueError("A config object must be provided to initialize the game.")
 
-        self.difficulty = difficulty
+        self.difficulty = str(difficulty)
         self.all_possible_colors = ["blue", "yellow", "black", "red"]
-        self.map_config = self._load_map_config(difficulty)
+
+        self.map_config = self._load_map_config(self.difficulty)
         self.colors_in_play = self.map_config["colors_in_play"]
+
         game_settings = config['game_settings']
         self.cards_for_cure = game_settings['cards_for_cure']
         self.map = self.map_config["cities"]
-        self.max_actions_per_game = game_settings[difficulty]["max_actions_per_game"]
+        self.max_actions_per_game = game_settings[self.difficulty]["max_actions_per_game"]
         self.all_cities = list(self.map.keys())
         self.city_to_idx = {city: i for i, city in enumerate(self.all_cities)}
         self.idx_to_city = {i: city for city, i in self.city_to_idx.items()}
+
         self._build_action_maps()
         self._build_edge_index()
         self.reset()
@@ -34,11 +38,15 @@ class PandemicGame:
         self.player_location = random.choice(self.all_cities)
         self.actions_taken = 0
         self.outbreaks = 0
+        
         self.deck = [city for city in self.all_cities]
         random.shuffle(self.deck)
         self.player_hand = []
+        
         self.board_state = {city: {"cubes": {color: 0 for color in self.all_possible_colors}} for city in self.map}
+        
         self.investigation_centers = set(self.map_config.get("investigation_centers", []))
+        
         self.cures = {color: {"found": False, "eradicated": False} for color in self.all_possible_colors}
         cures_already_found = self.map_config.get("cures_found", [])
         for color in cures_already_found:
@@ -54,13 +62,37 @@ class PandemicGame:
         return self.get_state_as_graph()
 
     def _setup_initial_board(self):
-        # New setup logic: draw 9 cards and place cubes accordingly.
-        for i in range(3):
-            self._infect_city(3)
-        for i in range(3):
-            self._infect_city(2)
-        for i in range(3):
-            self._infect_city(1)
+        # This new logic ensures unique cities are chosen for the initial infection,
+        # preventing the chain-reaction outbreaks that caused an immediate loss on small maps.
+        
+        # Take 9 unique cities from the infection deck for setup.
+        infection_candidates = list(self.infection_deck)
+        random.shuffle(infection_candidates)
+        cards_to_infect = infection_candidates[:9]
+
+        # Infect the first 3 cities with 3 cubes.
+        for city_name in cards_to_infect[0:3]:
+            color = self.map[city_name]['color']
+            self.board_state[city_name]['cubes'][color] = 3
+        
+        # Infect the next 3 cities with 2 cubes, if they exist.
+        if len(cards_to_infect) > 3:
+            for city_name in cards_to_infect[3:6]:
+                color = self.map[city_name]['color']
+                self.board_state[city_name]['cubes'][color] = 2
+
+        # Infect the final 3 cities with 1 cube, if they exist.
+        if len(cards_to_infect) > 6:
+            for city_name in cards_to_infect[6:9]:
+                color = self.map[city_name]['color']
+                self.board_state[city_name]['cubes'][color] = 1
+        
+        # Move the used cards to the discard pile and remove them from the deck.
+        self.infection_discard.extend(cards_to_infect)
+        for card in cards_to_infect:
+            if card in self.infection_deck:
+                 self.infection_deck.remove(card)
+
 
     def is_game_over(self):
         if self.actions_taken >= self.max_actions_per_game or self.outbreaks >= 8:
@@ -95,6 +127,8 @@ class PandemicGame:
             self.infection_deck = self.infection_discard
             self.infection_discard = []
         
+        if not self.infection_deck: return # Stop if deck is empty
+
         city_name = self.infection_deck.pop(0)
         self.infection_discard.append(city_name)
         color = self.map[city_name]['color']
@@ -107,7 +141,6 @@ class PandemicGame:
                 self.board_state[city_name]["cubes"][color] += 1
             else:
                 self._outbreak(city_name, color)
-                # An outbreak can trigger a chain reaction, but we stop after the first.
                 break
 
     def _outbreak(self, city, color):
@@ -190,7 +223,7 @@ class PandemicGame:
             cure_features = [1.0 if self.cures[c]["found"] else 0.0 for c in self.all_possible_colors]
             hand_features = [hand_colors.get(c, 0) / self.cards_for_cure for c in self.all_possible_colors]
             eradicated_features = [1.0 if self.cures[c]["eradicated"] else 0.0 for c in self.all_possible_colors]
-
+            
             features = cube_features + cure_features + hand_features + eradicated_features + [is_player, has_card, has_center]
             node_features.append(features)
 
@@ -201,11 +234,26 @@ class PandemicGame:
         return len(self.all_possible_colors) * 4 + 3
 
     def _build_action_maps(self):
-        # This method is unchanged
-        pass
+        self.action_to_idx = {}
+        self.idx_to_action = {}
+        action_idx_counter = 0
+        for i in range(len(self.all_cities)):
+            self.action_to_idx[json.dumps({"type": "move", "target_idx": i})] = action_idx_counter
+            self.idx_to_action[action_idx_counter] = {"type": "move", "target_idx": i}; action_idx_counter += 1
+        for i in range(len(self.all_cities)):
+            for color in self.all_possible_colors:
+                self.action_to_idx[json.dumps({"type": "treat", "target_idx": i, "color": color})] = action_idx_counter
+                self.idx_to_action[action_idx_counter] = {"type": "treat", "target_idx": i, "color": color}; action_idx_counter += 1
+        for color in self.all_possible_colors:
+            self.action_to_idx[json.dumps({"type": "discover_cure", "color": color})] = action_idx_counter
+            self.idx_to_action[action_idx_counter] = {"type": "discover_cure", "color": color}; action_idx_counter += 1
+        for i in range(len(self.all_cities)):
+            self.action_to_idx[json.dumps({"type": "build_investigation_center", "target_idx": i})] = action_idx_counter
+            self.idx_to_action[action_idx_counter] = {"type": "build_investigation_center", "target_idx": i}; action_idx_counter += 1
+        self.action_to_idx[json.dumps({"type": "pass"})] = action_idx_counter
+        self.idx_to_action[action_idx_counter] = {"type": "pass"}
 
     def get_possible_action_mask(self):
-        # This method is unchanged, but the logic inside `discover_cure` now checks `cures[color]['found']`
         mask = [False] * len(self.action_to_idx)
         player_loc_idx = self.city_to_idx[self.player_location]
 
@@ -233,5 +281,10 @@ class PandemicGame:
         return torch.tensor(mask, dtype=torch.bool)
         
     def _build_edge_index(self):
-        # This method is unchanged
-        pass
+        edge_list = []
+        for city, data in self.map.items():
+            for neighbor in data["neighbors"]:
+                if neighbor not in self.city_to_idx:
+                    continue
+                edge_list.append([self.city_to_idx[city], self.city_to_idx[neighbor]])
+        self.edge_index = torch.tensor(edge_list, dtype=torch.long).t().contiguous()

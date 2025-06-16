@@ -205,9 +205,9 @@ class PandemicGame:
         done, result = self.is_game_over()
         reward = 0
         if done and result == "win":
-            reward = 1000.0 / self.actions_taken if self.actions_taken > 0 else 1000.0
+            reward = 700.0 / self.actions_taken if self.actions_taken > 0 else 1000.0
         elif done and result == "loss":
-            reward = -500.0
+            reward = -1000.0
 
         return next_state, reward, done
 

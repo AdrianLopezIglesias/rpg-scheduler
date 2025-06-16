@@ -30,7 +30,7 @@ def run_curriculum_training(config):
             temp_config = copy.deepcopy(config)
             current_learning_rate = curriculum_cfg['learning_rate']
             if i > 0: # This is a retry
-                current_learning_rate /= 10.0
+                current_learning_rate = current_learning_rate * 0.5
                 log(f"This is a retry. Using smaller learning rate: {current_learning_rate}")
 
             model_save_path = f"models/{curriculum_cfg['model_name_prefix']}_diff_{difficulty}_attempt_{i+1}.pth"

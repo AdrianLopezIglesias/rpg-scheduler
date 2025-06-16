@@ -8,6 +8,7 @@ class PolicyNetwork(nn.Module):
         
         self.conv1 = GCNConv(input_dim, hidden_dim)
         self.conv2 = GCNConv(hidden_dim, hidden_dim)
+        self.conv3 = GCNConv(hidden_dim, hidden_dim)
         
         self.move_head = nn.Linear(hidden_dim * 2, 1)
         self.treat_head = nn.Linear(hidden_dim * 2, 1)
@@ -20,6 +21,8 @@ class PolicyNetwork(nn.Module):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         x = self.conv1(x, edge_index)
         x = F.relu(x)
-        node_embeddings = self.conv2(x, edge_index)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+        node_embeddings = self.conv3(x, edge_index)
         graph_embedding = global_mean_pool(node_embeddings, batch)
         return node_embeddings, graph_embedding

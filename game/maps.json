@@ -125,7 +125,7 @@
     "7": {
         "cards_for_cure": 4,
 		"title": "Find most hard cure",
-        "max_actions_per_game": 100,
+        "max_actions_per_game": 40,
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
         "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
@@ -156,7 +156,7 @@
     "10": {
         "cards_for_cure": 3,
 		"title": "Find harder cure and treat simple",
-        "max_actions_per_game": 150,
+        "max_actions_per_game": 30,
         "colors_in_play": ["blue"],
         "cures_found": [],
         "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 1 },

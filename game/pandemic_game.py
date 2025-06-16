@@ -205,7 +205,13 @@ class PandemicGame:
         done, result = self.is_game_over()
         reward = 0
         if done and result == "win":
-            reward = 700.0 / self.actions_taken if self.actions_taken > 0 else 1000.0
+			# --- Start of new win reward logic ---
+            basic_win_reward = 500.0
+            # Calculate the penalty for each action taken, based on your formula
+            discount_per_action = basic_win_reward / (self.max_actions_per_game * 5)
+            final_win_reward = basic_win_reward - (discount_per_action * self.actions_taken)
+            # Ensure the reward for winning is never negative
+            reward = max(0, final_win_reward)
         elif done and result == "loss":
             reward = -1000.0
 

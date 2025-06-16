@@ -51,6 +51,12 @@ class PandemicGame:
         
         self.deck = [city for city, data in self.map.items() if data['color'] in self.colors_in_play]
         random.shuffle(self.deck)
+        
+        # --- NEW: Store initial deck properties ---
+        self.initial_deck_size = len(self.deck)
+        self.total_cards_by_color = Counter(self.map[card]['color'] for card in self.deck)
+        # --- End of new code ---
+
         self.player_hand = []
         
         self.board_state = {city: {"cubes": {color: 0 for color in self.all_possible_colors}} for city in self.map}
@@ -79,28 +85,46 @@ class PandemicGame:
         self._update_disease_statuses()
         return self.get_state_as_graph()
 
-
     def _setup_initial_board(self):
+        # Get the setup instructions from the map config
+        initial_cubes_config = self.map_config.get("initial_cubes", {})
+        num_three_cubes = initial_cubes_config.get("three_cubes", 0)
+        num_two_cubes = initial_cubes_config.get("two_cubes", 0)
+        num_one_cube = initial_cubes_config.get("one_cube", 0)
+        
+        # Get a shuffled list of cities that can be infected
         infection_candidates = list(self.infection_deck)
         random.shuffle(infection_candidates)
-        cards_to_infect = infection_candidates[:9]
+        
+        cities_to_infect = []
 
-        for city_name in cards_to_infect[0:3]:
+        # Infect cities with 3 cubes
+        for _ in range(num_three_cubes):
+            if not infection_candidates: break
+            city_name = infection_candidates.pop(0)
             color = self.map[city_name]['color']
             self.board_state[city_name]['cubes'][color] = 3
+            cities_to_infect.append(city_name)
 
-        if len(cards_to_infect) > 3:
-            for city_name in cards_to_infect[3:6]:
-                color = self.map[city_name]['color']
-                self.board_state[city_name]['cubes'][color] = 2
+        # Infect cities with 2 cubes
+        for _ in range(num_two_cubes):
+            if not infection_candidates: break
+            city_name = infection_candidates.pop(0)
+            color = self.map[city_name]['color']
+            self.board_state[city_name]['cubes'][color] = 2
+            cities_to_infect.append(city_name)
 
-        if len(cards_to_infect) > 6:
-            for city_name in cards_to_infect[6:9]:
-                color = self.map[city_name]['color']
-                self.board_state[city_name]['cubes'][color] = 1
-
-        self.infection_discard.extend(cards_to_infect)
-        for card in cards_to_infect:
+        # Infect cities with 1 cube
+        for _ in range(num_one_cube):
+            if not infection_candidates: break
+            city_name = infection_candidates.pop(0)
+            color = self.map[city_name]['color']
+            self.board_state[city_name]['cubes'][color] = 1
+            cities_to_infect.append(city_name)
+            
+        # Update the infection deck and discard pile correctly
+        self.infection_discard.extend(cities_to_infect)
+        for card in cities_to_infect:
              if card in self.infection_deck:
                  self.infection_deck.remove(card)
 
@@ -205,7 +229,7 @@ class PandemicGame:
         done, result = self.is_game_over()
         reward = 0
         if done and result == "win":
-			# --- Start of new win reward logic ---
+            # --- Start of new win reward logic ---
             basic_win_reward = 500.0
             # Calculate the penalty for each action taken, based on your formula
             discount_per_action = basic_win_reward / (self.max_actions_per_game * 5)
@@ -221,9 +245,30 @@ class PandemicGame:
         node_features = []
         player_loc_idx = self.city_to_idx[self.player_location]
         hand_colors = Counter(self.map[card]['color'] for card in self.player_hand)
-
         disease_statuses = {d['color']: d['status'] for d in self.diseases}
         
+        # --- NEW FEATURES ---
+        # 1. Actions until the next infection phase
+        actions_until_infection = (4 - (self.actions_taken % 4)) / 4.0
+        
+        # 2. Ratio of player deck cards remaining
+        remaining_deck_ratio = len(self.deck) / self.initial_deck_size if self.initial_deck_size > 0 else 0
+        
+        # 3. Per-color card distribution features
+        cards_in_deck_by_color = Counter(self.map[card]['color'] for card in self.deck)
+        color_card_features = []
+        for color in self.all_possible_colors:
+            total = self.total_cards_by_color.get(color, 0)
+            if total == 0:
+                color_card_features.extend([0.0, 0.0]) # remaining ratio, discard ratio
+            else:
+                remaining_in_deck = cards_in_deck_by_color.get(color, 0)
+                in_hand = hand_colors.get(color, 0)
+                discarded = total - remaining_in_deck - in_hand
+                color_card_features.append(remaining_in_deck / total)
+                color_card_features.append(discarded / total)
+        # --- END OF NEW FEATURES ---
+
         norm_cards_for_cure = self.cards_for_cure / 10.0
 
         for i in range(len(self.all_cities)):
@@ -238,14 +283,29 @@ class PandemicGame:
             hand_features = [hand_colors.get(c, 0) / self.cards_for_cure for c in self.all_possible_colors]
             eradicated_features = [1.0 if disease_statuses[c] == 'eradicated' else 0.0 for c in self.all_possible_colors]
             
-            features = cube_features + cure_features + hand_features + eradicated_features + [is_player, has_card, has_center, norm_cards_for_cure]
+            # --- MODIFIED: Added all new features to the vector ---
+            global_features = [
+                norm_cards_for_cure, 
+                actions_until_infection, 
+                remaining_deck_ratio
+            ] + color_card_features
+
+            features = cube_features + cure_features + hand_features + eradicated_features + [is_player, has_card, has_center] + global_features
             node_features.append(features)
 
         x = torch.tensor(node_features, dtype=torch.float)
         return Data(x=x, edge_index=self.edge_index)
 
+
     def get_node_feature_count(self):
-        return len(self.all_possible_colors) * 4 + 4
+        # Original features: 4 colors * 4 features + 3 booleans = 19
+        # Your previous change added 'norm_cards_for_cure': 19 + 1 = 20
+        # New features:
+        #   actions_until_infection: +1
+        #   remaining_deck_ratio: +1
+        #   color_card_features (2 per color * 4 colors): +8
+        # Total = 20 + 1 + 1 + 8 = 30
+        return len(self.all_possible_colors) * 4 + 3 + 1 + 2 + (len(self.all_possible_colors) * 2)
 
     def _build_action_maps(self):
         self.action_to_idx = {}

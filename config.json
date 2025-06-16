@@ -35,8 +35,8 @@
         "num_games": 100
     },
     "playback_config": {
-        "model_path": "models/pandemic_model_curriculum_diff_10_attempt_1.pth",
-        "difficulty": "10"
+        "model_path": "models/pandemic_model_curriculum_diff_4_attempt_2.pth",
+        "difficulty": "4"
     },
 
     "debug_train_config": {

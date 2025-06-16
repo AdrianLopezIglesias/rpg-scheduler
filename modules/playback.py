@@ -47,6 +47,23 @@ def run_gnn_playback(config):
         log(f"Cubes on board: {non_zero_cubes if non_zero_cubes else 'None'}")
         log(f"Player Hand: {env.player_hand}")
 
+        # --- NEW: Logging for global game state ---
+        log("\n--- Global State ---")
+        actions_until_infection = 4 - (env.actions_taken % 4)
+        log(f"Actions until next infection: {actions_until_infection}")
+        deck_status = f"Player deck: {len(env.deck)} / {env.initial_deck_size} cards remaining"
+        log(deck_status)
+        log("Card Distribution:")
+        cards_in_deck_by_color = Counter(env.map[card]['color'] for card in env.deck)
+        cards_in_hand_by_color = Counter(env.map[card]['color'] for card in env.player_hand)
+        for color in env.colors_in_play:
+            total = env.total_cards_by_color.get(color, 0)
+            in_deck = cards_in_deck_by_color.get(color, 0)
+            in_hand = cards_in_hand_by_color.get(color, 0)
+            discarded = total - in_deck - in_hand
+            log(f"  - {color.capitalize()}: {in_deck} in deck, {in_hand} in hand, {discarded} discarded (Total: {total})")
+        # --- End of new logging ---
+
         with torch.no_grad():
             state.batch = torch.zeros(state.num_nodes, dtype=torch.long)
             log("\nModel Evaluation:")
@@ -82,17 +99,23 @@ def run_gnn_playback(config):
                  if is_possible:
                     action_desc = env.idx_to_action[action_idx]
                     score = 0
-                    if action_desc.get('type') == 'move':
-                         score = agent.policy_network.move_head(node_embeddings[action_desc['target_idx']])
-                    elif action_desc.get('type') == 'treat':
-                        score = agent.policy_network.treat_head(node_embeddings[action_desc['target_idx']])
-                    elif action_desc.get('type') == 'discover_cure':
+                    action_type = action_desc.get("type")
+
+                    if action_type == 'move':
+                        target_node_embedding = node_embeddings[action_desc['target_idx']]
+                        combined_embedding = torch.cat([target_node_embedding, graph_embedding.squeeze(0)])
+                        score = agent.policy_network.move_head(combined_embedding)
+                    elif action_type == 'treat':
+                        target_node_embedding = node_embeddings[action_desc['target_idx']]
+                        combined_embedding = torch.cat([target_node_embedding, graph_embedding.squeeze(0)])
+                        score = agent.policy_network.treat_head(combined_embedding)
+                    elif action_type == 'discover_cure':
                         color_scores = agent.policy_network.cure_head(graph_embedding)
                         color_idx = agent.colors.index(action_desc['color'])
                         score = color_scores[0, color_idx]
-                    elif action_desc.get('type') == 'build_investigation_center':
-                         score = agent.policy_network.build_head(node_embeddings[action_desc['target_idx']])
-                    elif action_desc.get('type') == 'pass':
+                    elif action_type == 'build_investigation_center':
+                        score = agent.policy_network.build_head(node_embeddings[action_desc['target_idx']])
+                    elif action_type == 'pass':
                         score = agent.policy_network.pass_head(graph_embedding)
 
                     logits[action_idx] = score

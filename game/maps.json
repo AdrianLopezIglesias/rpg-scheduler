@@ -1,7 +1,7 @@
 {
     "0": {
         "cards_for_cure": 3,
-		"title": "Basic move and treat",
+        "title": "Basic move and treat",
         "max_actions_per_game": 50,
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
@@ -22,9 +22,9 @@
             }
         }
     },
-    "3": {
+    "1": {
         "cards_for_cure": 1,
-		"title": "Find simple cure",
+        "title": "Find simple cure",
         "max_actions_per_game": 100,
         "colors_in_play": ["blue"],
         "cures_found": [],
@@ -45,10 +45,56 @@
             }
         }
     },
-    "4": {
+    "2": {
         "cards_for_cure": 2,
-		"title": "Find harder cure",
+        "title": "Find simple cure 2",
         "max_actions_per_game": 100,
+        "colors_in_play": ["blue"],
+        "cures_found": [],
+        "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
+        "investigation_centers": ["Atlanta"],
+        "cities": {
+            "Atlanta": {
+                "color": "blue",
+                "neighbors": ["Chicago", "Washington"]
+            },
+            "Chicago": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "Washington"]
+            },
+            "Washington": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "Chicago"]
+            }
+        }
+    },
+    "3": {
+        "cards_for_cure": 1,
+        "title": "Find simple cure",
+        "max_actions_per_game": 100,
+        "colors_in_play": ["blue"],
+        "cures_found": [],
+        "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
+        "investigation_centers": ["Chicago"],
+        "cities": {
+            "Atlanta": {
+                "color": "blue",
+                "neighbors": ["Chicago", "Washington"]
+            },
+            "Chicago": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "Washington"]
+            },
+            "Washington": {
+                "color": "blue",
+                "neighbors": ["Atlanta", "Chicago"]
+            }
+        }
+    },
+    "4": {
+        "cards_for_cure": 3,
+        "title": "Find harder cure",
+        "max_actions_per_game": 30,
         "colors_in_play": ["blue"],
         "cures_found": [],
         "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
@@ -70,7 +116,7 @@
     },
     "5": {
         "cards_for_cure": 2,
-		"title": "Find cure and treat",
+        "title": "Find cure and treat",
         "max_actions_per_game": 150,
         "colors_in_play": ["blue"],
         "cures_found": [],
@@ -93,7 +139,7 @@
     },
     "6": {
         "cards_for_cure": 3,
-		"title": "Treat harder",
+        "title": "Treat harder",
         "max_actions_per_game": 100,
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
@@ -124,10 +170,10 @@
     },
     "7": {
         "cards_for_cure": 4,
-		"title": "Find most hard cure",
-        "max_actions_per_game": 40,
+        "title": "Find most hard cure",
+        "max_actions_per_game": 30,
         "colors_in_play": ["blue"],
-        "cures_found": ["blue"],
+        "cures_found": [],
         "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
         "investigation_centers": ["Atlanta"],
         "cities": {
@@ -155,8 +201,8 @@
     },
     "10": {
         "cards_for_cure": 3,
-		"title": "Find harder cure and treat simple",
-        "max_actions_per_game": 30,
+        "title": "Find harder cure and treat simple",
+        "max_actions_per_game": 60,
         "colors_in_play": ["blue"],
         "cures_found": [],
         "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 1 },
@@ -186,7 +232,7 @@
     },
     "11": {
         "cards_for_cure": 3,
-		"title": "Find harder cure and treat harder",
+        "title": "Find harder cure and treat harder",
         "max_actions_per_game": 150,
         "colors_in_play": ["blue"],
         "cures_found": [],
@@ -217,7 +263,7 @@
     },
     "15": {
         "cards_for_cure": 3,
-		"title": "Find 2 hard cures cure and treat harder on big map",
+        "title": "Find 2 hard cures cure and treat harder on big map",
         "max_actions_per_game": 500,
         "colors_in_play": ["blue", "yellow"],
         "cures_found": [],

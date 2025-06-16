@@ -230,14 +230,14 @@ class PandemicGame:
         reward = 0
         if done and result == "win":
             # --- Start of new win reward logic ---
-            basic_win_reward = 500.0
-            # Calculate the penalty for each action taken, based on your formula
-            discount_per_action = basic_win_reward / (self.max_actions_per_game * 5)
-            final_win_reward = basic_win_reward - (discount_per_action * self.actions_taken)
-            # Ensure the reward for winning is never negative
+            base_win_reward = 100.0
+            decay_rate = 0.98
+            num_turns = ((self.actions_taken - 1) // 4) + 1
+            final_win_reward = base_win_reward * (decay_rate ** (num_turns - 1))
+            reward = final_win_reward
             reward = max(0, final_win_reward)
         elif done and result == "loss":
-            reward = -1000.0
+            reward = 0
 
         return next_state, reward, done
 
@@ -247,50 +247,54 @@ class PandemicGame:
         hand_colors = Counter(self.map[card]['color'] for card in self.player_hand)
         disease_statuses = {d['color']: d['status'] for d in self.diseases}
         
-        # --- NEW FEATURES ---
-        # 1. Actions until the next infection phase
+        # --- Global Features ---
         actions_until_infection = (4 - (self.actions_taken % 4)) / 4.0
-        
-        # 2. Ratio of player deck cards remaining
         remaining_deck_ratio = len(self.deck) / self.initial_deck_size if self.initial_deck_size > 0 else 0
-        
-        # 3. Per-color card distribution features
         cards_in_deck_by_color = Counter(self.map[card]['color'] for card in self.deck)
         color_card_features = []
         for color in self.all_possible_colors:
             total = self.total_cards_by_color.get(color, 0)
             if total == 0:
-                color_card_features.extend([0.0, 0.0]) # remaining ratio, discard ratio
+                color_card_features.extend([0.0, 0.0])
             else:
                 remaining_in_deck = cards_in_deck_by_color.get(color, 0)
                 in_hand = hand_colors.get(color, 0)
                 discarded = total - remaining_in_deck - in_hand
                 color_card_features.append(remaining_in_deck / total)
                 color_card_features.append(discarded / total)
-        # --- END OF NEW FEATURES ---
-
         norm_cards_for_cure = self.cards_for_cure / 10.0
+        global_features = [
+            norm_cards_for_cure, 
+            actions_until_infection, 
+            remaining_deck_ratio
+        ] + color_card_features
+        # --- End Global Features ---
 
         for i in range(len(self.all_cities)):
             city_name = self.idx_to_city[i]
+            
+            # --- Local Features ---
             is_player = 1.0 if i == player_loc_idx else 0.0
             has_card = 1.0 if city_name in self.player_hand else 0.0
             has_center = 1.0 if city_name in self.investigation_centers else 0.0
-            city_cubes = self.board_state[city_name]["cubes"]
             
+            # --- NEW: "should_have_center" logic ---
+            should_have_center = 0.0
+            if not has_center:
+                neighbor_has_center = any(neighbor in self.investigation_centers for neighbor in self.map[city_name]["neighbors"])
+                if not neighbor_has_center:
+                    should_have_center = 1.0
+            # --- End of new logic ---
+
+            city_cubes = self.board_state[city_name]["cubes"]
             cube_features = [city_cubes[c] / 3.0 for c in self.all_possible_colors]
             cure_features = [1.0 if disease_statuses[c] in ['cured', 'eradicated'] else 0.0 for c in self.all_possible_colors]
             hand_features = [hand_colors.get(c, 0) / self.cards_for_cure for c in self.all_possible_colors]
             eradicated_features = [1.0 if disease_statuses[c] == 'eradicated' else 0.0 for c in self.all_possible_colors]
             
-            # --- MODIFIED: Added all new features to the vector ---
-            global_features = [
-                norm_cards_for_cure, 
-                actions_until_infection, 
-                remaining_deck_ratio
-            ] + color_card_features
-
-            features = cube_features + cure_features + hand_features + eradicated_features + [is_player, has_card, has_center] + global_features
+            local_features = [is_player, has_card, has_center, should_have_center]
+            
+            features = cube_features + cure_features + hand_features + eradicated_features + local_features + global_features
             node_features.append(features)
 
         x = torch.tensor(node_features, dtype=torch.float)
@@ -298,14 +302,7 @@ class PandemicGame:
 
 
     def get_node_feature_count(self):
-        # Original features: 4 colors * 4 features + 3 booleans = 19
-        # Your previous change added 'norm_cards_for_cure': 19 + 1 = 20
-        # New features:
-        #   actions_until_infection: +1
-        #   remaining_deck_ratio: +1
-        #   color_card_features (2 per color * 4 colors): +8
-        # Total = 20 + 1 + 1 + 8 = 30
-        return len(self.all_possible_colors) * 4 + 3 + 1 + 2 + (len(self.all_possible_colors) * 2)
+        return len(self.all_possible_colors) * 4 + 4 + 3 + (len(self.all_possible_colors) * 2)
 
     def _build_action_maps(self):
         self.action_to_idx = {}
@@ -335,22 +332,23 @@ class PandemicGame:
             if neighbor not in self.city_to_idx: continue
             neighbor_idx = self.city_to_idx[neighbor]
             mask[self.action_to_idx[json.dumps({"type": "move", "target_idx": neighbor_idx})]] = True
-
+        
         for color in self.colors_in_play:
             if self.board_state[self.player_location]["cubes"][color] > 0:
                 mask[self.action_to_idx[json.dumps({"type": "treat", "target_idx": player_loc_idx, "color": color})]] = True
-
+        
         if self.player_location in self.investigation_centers:
             hand_colors = Counter(self.map[card]['color'] for card in self.player_hand)
             for disease in self.diseases:
                 if disease['status'] == 'active' and hand_colors.get(disease['color'], 0) >= self.cards_for_cure:
                     mask[self.action_to_idx[json.dumps({"type": "discover_cure", "color": disease['color']})]] = True
-
+        
         if self.player_location not in self.investigation_centers and self.player_location in self.player_hand:
             mask[self.action_to_idx[json.dumps({"type": "build_investigation_center", "target_idx": player_loc_idx})]] = True
 
-        if not any(mask):
-            mask[self.action_to_idx[json.dumps({"type": "pass"})]] = True
+        # --- MODIFIED LOGIC ---
+        # The 'pass' action is now always available, not just when other moves are impossible.
+        mask[self.action_to_idx[json.dumps({"type": "pass"})]] = True
 
         return torch.tensor(mask, dtype=torch.bool)
 

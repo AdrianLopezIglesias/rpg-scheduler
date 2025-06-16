@@ -1,33 +1,55 @@
 {
     "curriculum_config": {
-        "difficulties": ["0", "3", "4", "5", "6", "7", "10", "11", "15"],
+        "difficulties": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "10",
+            "11",
+            "15"
+        ],
         "targets": {
-            "0": { "target_win_rate": 95.0 },
-            "3": { "target_win_rate": 95.0 },
-            "4": { "target_win_rate": 95.0 },
-            "5": { "target_win_rate": 95.0 },
-            "6": { "target_win_rate": 95.0 },
-            "7": { "target_win_rate": 95.0 },
-            "10": { "target_win_rate": 95.0 },
-            "11": { "target_win_rate": 95.0 },
-            "15": { "target_win_rate": 95.0 }
+            "0": { "target_win_rate": 80.0 },
+            "1": { "target_win_rate": 80.0 },
+            "2": { "target_win_rate": 80.0 },
+            "3": { "target_win_rate": 80.0 },
+            "4": { "target_win_rate": 80.0 },
+            "5": { "target_win_rate": 80.0 },
+            "6": { "target_win_rate": 80.0 },
+            "7": { "target_win_rate": 80.0 },
+            "10": { "target_win_rate": 80.0 },
+            "11": { "target_win_rate": 80.0 },
+            "15": { "target_win_rate": 80.0 }
         },
         "max_retries": 10,
         "model_name_prefix": "pandemic_model_curriculum",
-        "learning_rate": 0.000051,
-        "gamma": 0.99,
-        "num_episodes": 2000,
+        "learning_rate": 0.000151,
+        "gamma": 0.999,
+        "num_episodes": 1000,
         "log_interval": 100,
         "validation_games": 100
     },
     "rl_config": {
-        "difficulty": "tutorial",
-        "learning_rate": 0.0005,
-        "gamma": 0.99,
+        "difficulty": "10",
+        "learning_rate": 0.001,
+        "gamma": 0.999,
         "num_episodes": 1000,
-        "log_interval": 100,
+        "log_interval": 2000,
         "load_model_path": null,
-        "model_save_path": "models/rl_gnn_model_tutorial_phase4.pth"
+        "model_save_path": "models/pandemic_model_curriculum_diff_10_attempt_2.pth",
+        "temperature_prob": 0.2,
+        "temperature_value": 2.0,
+        "temperature_weights": {
+            "full_random": 5,
+            "top_2_random": 10,
+            "fixed_bonus": 0,
+            "proportional_bonus": 0
+        }
     },
     "validation_config": {
         "model_path": "models/rl_gnn_model_hard_phase3.pth",
@@ -35,8 +57,8 @@
         "num_games": 100
     },
     "playback_config": {
-        "model_path": "models/pandemic_model_curriculum_diff_4_attempt_2.pth",
-        "difficulty": "4"
+        "model_path": "models/pandemic_model_curriculum_diff_3_attempt_3.pth",
+        "difficulty": "3"
     },
 
     "debug_train_config": {

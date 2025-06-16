@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, global_mean_pool
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim, hidden_dim=32):
+    def __init__(self, input_dim, hidden_dim=528):
         super(PolicyNetwork, self).__init__()
         
         self.conv1 = GCNConv(input_dim, hidden_dim)

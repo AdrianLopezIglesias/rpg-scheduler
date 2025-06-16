@@ -9,8 +9,8 @@ class PolicyNetwork(nn.Module):
         self.conv1 = GCNConv(input_dim, hidden_dim)
         self.conv2 = GCNConv(hidden_dim, hidden_dim)
         
-        self.move_head = nn.Linear(hidden_dim, 1)
-        self.treat_head = nn.Linear(hidden_dim, 1)
+        self.move_head = nn.Linear(hidden_dim * 2, 1)
+        self.treat_head = nn.Linear(hidden_dim * 2, 1)
         self.cure_head = nn.Linear(hidden_dim, 4)
         self.pass_head = nn.Linear(hidden_dim, 1)
         # New specialist for building centers

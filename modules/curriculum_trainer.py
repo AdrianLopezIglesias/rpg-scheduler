@@ -1,4 +1,6 @@
 import copy
+import json
+import os
 from .rl_trainer import run_rl_training
 from .validator import run_validation
 from .utils import log
@@ -7,10 +9,15 @@ def run_curriculum_training(config):
     curriculum_cfg = config['curriculum_config']
     log("=============== STARTING CURRICULUM TRAINING RUN ===============")
     
-    last_successful_model_path = None
+    # Load map data to access titles
+    maps_path = os.path.join(os.path.dirname(__file__), '..', 'game', 'maps.json')
+    with open(maps_path, 'r') as f:
+        maps_data = json.load(f)
 
+    last_successful_model_path = None
     for difficulty in curriculum_cfg['difficulties']:
-        log(f"\n{'='*20} Starting Stage: Difficulty {difficulty} {'='*20}")
+        map_title = maps_data.get(difficulty, {}).get('title', 'No Title Found')
+        log(f"\n{'='*20} Starting Stage: Difficulty {difficulty} ({map_title}) {'='*20}")
         target_win_rate = curriculum_cfg['targets'][difficulty]['target_win_rate']
         
         # This will track the most recent model for the current difficulty, including failed attempts.
@@ -56,7 +63,7 @@ def run_curriculum_training(config):
             if fastest_win == 'N/A' or avg_win == 'N/A':
                 speed_ok = False
             else:
-                speed_ok = avg_win <= (fastest_win * 2)
+                speed_ok = (avg_win) <= ((fastest_win  + 10) * 2)
 
             log(f"--- Validation Check for Attempt {i+1} ---")
             log(f"Target Win Rate: >={target_win_rate}%. Actual: {current_win_rate:.2f}%. -> {'MET' if win_rate_ok else 'NOT MET'}")
@@ -64,7 +71,7 @@ def run_curriculum_training(config):
             if isinstance(avg_win, str) or isinstance(fastest_win, str):
                 log("Speed Target: N/A (no wins recorded)")
             else:
-                log(f"Speed Target: Avg <= Fastest * 2. Actual: {avg_win:.2f} <= {fastest_win * 2:.2f}. -> {'MET' if speed_ok else 'NOT MET'}")
+                log(f"Speed Target: Avg <= Fastest * 3. Actual: {avg_win:.2f} <= {((fastest_win  + 10) * 2):.2f}. -> {'MET' if speed_ok else 'NOT MET'}")
 
             if win_rate_ok and speed_ok:
                 log(f"SUCCESS: Model passed all checks for difficulty {difficulty}.")

@@ -27,15 +27,19 @@ class GNNAgent(Agent):
                 action_type = action_desc.get("type")
                 
                 if action_type == 'move':
-                    score = self.policy_network.move_head(node_embeddings[action_desc['target_idx']])
+                    target_node_embedding = node_embeddings[action_desc['target_idx']]
+                    combined_embedding = torch.cat([target_node_embedding, graph_embedding.squeeze(0)])
+                    score = self.policy_network.move_head(combined_embedding)
                 elif action_type == 'treat':
-                    score = self.policy_network.treat_head(node_embeddings[action_desc['target_idx']])
+                    target_node_embedding = node_embeddings[action_desc['target_idx']]
+                    combined_embedding = torch.cat([target_node_embedding, graph_embedding.squeeze(0)])
+                    score = self.policy_network.treat_head(combined_embedding)
                 elif action_type == 'discover_cure':
                     color_scores = self.policy_network.cure_head(graph_embedding)
                     color_idx = self.colors.index(action_desc['color'])
                     score = color_scores[0, color_idx]
                 elif action_type == 'build_investigation_center':
-                    score = self.policy_network.build_head(node_embeddings[action_desc['target_idx']])
+                    score = self.policy_network.build_head(graph_embedding)
                 elif action_type == 'pass':
                     score = self.policy_network.pass_head(graph_embedding)
                 

@@ -231,13 +231,12 @@ class PandemicGame:
         if done and result == "win":
             # --- Start of new win reward logic ---
             base_win_reward = 100.0
-            decay_rate = 0.98
+            decay_rate = 0.99
             num_turns = ((self.actions_taken - 1) // 4) + 1
             final_win_reward = base_win_reward * (decay_rate ** (num_turns - 1))
-            reward = final_win_reward
             reward = max(0, final_win_reward)
         elif done and result == "loss":
-            reward = 0
+            reward = -1000
 
         return next_state, reward, done
 

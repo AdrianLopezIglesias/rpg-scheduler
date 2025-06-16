@@ -21,8 +21,8 @@ class PolicyNetwork(nn.Module):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         x = self.conv1(x, edge_index)
         x = F.relu(x)
-        # x = self.conv2(x, edge_index)
-        # x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
         node_embeddings = self.conv3(x, edge_index)
         graph_embedding = global_mean_pool(node_embeddings, batch)
         return node_embeddings, graph_embedding

@@ -28,7 +28,7 @@
         },
         "max_retries": 10,
         "model_name_prefix": "pandemic_model_curriculum",
-        "learning_rate": 0.000151,
+        "learning_rate": 0.000551,
         "gamma": 0.999,
         "num_episodes": 1000,
         "log_interval": 100,

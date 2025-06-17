@@ -8,8 +8,13 @@ class PolicyNetwork(nn.Module):
         
         # GCN Layers
         self.conv1 = GCNConv(input_dim, hidden_dim)
+        self.norm1 = nn.LayerNorm(hidden_dim)
         self.conv2 = GCNConv(hidden_dim, hidden_dim)
+        self.norm2 = nn.LayerNorm(hidden_dim)
         self.conv3 = GCNConv(hidden_dim, hidden_dim)
+        self.norm3 = nn.LayerNorm(hidden_dim)
+        self.conv4 = GCNConv(hidden_dim, hidden_dim)
+        self.norm4 = nn.LayerNorm(hidden_dim)
         
         # --- Actor Heads (Multi-layer) ---
         self.move_head = nn.Sequential(
@@ -47,11 +52,21 @@ class PolicyNetwork(nn.Module):
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
-        x = self.conv1(x, edge_index)
-        x = F.relu(x)
-        # x = self.conv2(x, edge_index)
-        # x = F.relu(x)
-        node_embeddings = self.conv3(x, edge_index)
+        # Layer 1
+        x1_out = self.conv1(x, edge_index)
+        x = F.relu(self.norm1(x1_out))
+
+        # Layer 2 with residual connection
+        x2_out = self.conv2(x, edge_index)
+        x = F.relu(self.norm2(x2_out + x1_out)) # Add residual connection from layer 1
+
+        x3_out = self.conv3(x, edge_index)
+        x = F.relu(self.norm3(x3_out + x1_out)) # Add residual connection from layer 1
+
+        # Layer 3 with residual connection
+        x4_out = self.conv4(x, edge_index)
+        node_embeddings = F.relu(self.norm4(x4_out + x)) # Add residual connection from layer 2
+        
         graph_embedding = global_mean_pool(node_embeddings, batch)
 
         state_value = self.value_head(graph_embedding)

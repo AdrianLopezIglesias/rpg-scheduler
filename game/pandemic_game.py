@@ -251,7 +251,8 @@ class PandemicGame:
  
             reward = max(0, base_win_reward)
         elif done and result == "loss":
-            reward = -5000
+            # reward = -5000
+            reward = -9800 
 
         return next_state, reward, done
 

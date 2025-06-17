@@ -227,12 +227,12 @@ class PandemicGame:
 
         next_state = self.get_state_as_graph()
         done, result = self.is_game_over()
-        reward = 0
+        reward = -100
         if done and result == "win":
             # --- Start of new win reward logic ---
             base_win_reward = 10000.0
-            final_win_reward = base_win_reward - ((base_win_reward/100) * self.actions_taken)
-            reward = max(0, final_win_reward)
+            final_win_reward = base_win_reward - ((base_win_reward/1000) * self.actions_taken)
+            reward = max(0, base_win_reward)
         elif done and result == "loss":
             reward = -1000
 

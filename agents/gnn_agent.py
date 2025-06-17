@@ -20,6 +20,9 @@ class GNNAgent(Agent):
         self.temp_strategies = list(self.temp_weights.keys())
         self.temp_weight_values = list(self.temp_weights.values())
 
+        self.entropy_coeff = self.rl_cfg.get("entropy_coeff", 0.01)
+        
+        self.entropies = []
         self.log_probs = []
         self.rewards = []
         self.values = [] # To store critic value predictions
@@ -79,6 +82,7 @@ class GNNAgent(Agent):
                     logits[bonus_idx] += random.uniform(0, self.temp_value)
 
         prob_dist = Categorical(logits=logits)
+        self.entropies.append(prob_dist.entropy())
 
         if chosen_action_idx_int != -1:
             chosen_action_idx = torch.tensor(chosen_action_idx_int)
@@ -89,6 +93,8 @@ class GNNAgent(Agent):
         self.values.append(state_value) # Store the predicted state value
 
         return chosen_action_idx.item()
+
+    # In agents/gnn_agent.py
 
     def update_policy(self):
         # REWRITTEN: Actor-Critic Update Logic
@@ -104,11 +110,15 @@ class GNNAgent(Agent):
 
         log_probs = torch.stack(self.log_probs)
         values = torch.stack(self.values).squeeze(-1)
-
-        advantage = returns - values
-        actor_loss = -(log_probs * advantage.detach()).mean()
+        entropies = torch.stack(self.entropies)
+        
+        # --- KEY CHANGES ARE HERE ---
+        advantage = returns - values.detach() # Detach values for advantage calculation
+        actor_loss = -(log_probs * advantage).mean() # No longer need .detach() here
+        
         critic_loss = F.smooth_l1_loss(values, returns)
-        loss = actor_loss + critic_loss
+        entropy_loss = -self.entropy_coeff * entropies.mean()
+        loss = actor_loss + critic_loss + entropy_loss
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -117,6 +127,7 @@ class GNNAgent(Agent):
         self.log_probs = []
         self.rewards = []
         self.values = []
+        self.entropies = []
 
     def load_model(self, path):
         self.policy_network.load_state_dict(torch.load(path))

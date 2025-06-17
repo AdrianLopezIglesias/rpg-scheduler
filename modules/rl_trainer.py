@@ -29,11 +29,12 @@ def run_rl_training(config):
             log(f"Warning: Pre-trained model not found at {rl_cfg['load_model_path']}. Starting from scratch.")
 
     scores_deque = deque(maxlen=100)
-    for i_episode in range(1, rl_cfg['num_episodes'] + 1):
+    for i_episode in range(1, (rl_cfg['num_episodes'] + 1) * int(active_difficulties[-1])):
         # --- NEW: Select a random environment for each episode ---
         current_difficulty = random.choice(active_difficulties)
         env = PandemicGame(difficulty=current_difficulty, config=config)
         # --- End of new logic ---
+
 
         state = env.reset()
         for t in range(env.max_actions_per_game):
@@ -45,6 +46,8 @@ def run_rl_training(config):
                 break
             state = next_state
         scores_deque.append(sum(agent.rewards))
+        if i_episode % 10 == 0:
+            print(f" Sample game: Difficulty: {current_difficulty}. Rewards: {round(sum(agent.rewards))}")
         agent.update_policy()
 
         if i_episode % rl_cfg['log_interval'] == 0:

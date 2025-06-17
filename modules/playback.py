@@ -108,25 +108,25 @@ def run_gnn_playback(config):
                     if action_type == 'move':
                         target_node_embedding = node_embeddings[action_desc['target_idx']]
                         combined_embedding = torch.cat([target_node_embedding, graph_embedding.squeeze(0)])
-                        log(f"    Input to move_head: {combined_embedding.detach().numpy()}")
+                        # log(f"    Input to move_head: {combined_embedding.detach().numpy()}")
                         score = agent.policy_network.move_head(combined_embedding)
                     elif action_type == 'treat':
                         target_node_embedding = node_embeddings[action_desc['target_idx']]
                         combined_embedding = torch.cat([target_node_embedding, graph_embedding.squeeze(0)])
-                        log(f"    Input to treat_head: {combined_embedding.detach().numpy()}")
+                        # log(f"    Input to treat_head: {combined_embedding.detach().numpy()}")
                         score = agent.policy_network.treat_head(combined_embedding)
                     elif action_type == 'discover_cure':
-                        log(f"    Input to cure_head: {graph_embedding.squeeze(0).detach().numpy()}")
+                        # log(f"    Input to cure_head: {graph_embedding.squeeze(0).detach().numpy()}")
                         color_scores = agent.policy_network.cure_head(graph_embedding)
                         color_idx = agent.colors.index(action_desc['color'])
                         score = color_scores[0, color_idx]
                     elif action_type == 'build_investigation_center':
                         target_node_embedding = node_embeddings[action_desc['target_idx']]
                         combined_embedding = torch.cat([target_node_embedding, graph_embedding.squeeze(0)])
-                        log(f"    Input to build_head: {combined_embedding.detach().numpy()}")
+                        # log(f"    Input to build_head: {combined_embedding.detach().numpy()}")
                         score = agent.policy_network.build_head(combined_embedding)
                     elif action_type == 'pass':
-                        log(f"    Input to pass_head: {graph_embedding.squeeze(0).detach().numpy()}")
+                        # log(f"    Input to pass_head: {graph_embedding.squeeze(0).detach().numpy()}")
                         score = agent.policy_network.pass_head(graph_embedding)
 
                     logits[action_idx] = score

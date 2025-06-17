@@ -14,15 +14,23 @@ class PolicyNetwork(nn.Module):
         self.treat_head = nn.Linear(hidden_dim * 2, 1)
         self.cure_head = nn.Linear(hidden_dim, 4)
         self.pass_head = nn.Linear(hidden_dim, 1)
-        # New specialist for building centers
-        self.build_head = nn.Linear(hidden_dim, 1)
+        
+        # --- THIS LINE NEEDS TO BE CORRECTED ---
+        # Change the input size from hidden_dim to hidden_dim * 2
+        self.build_head = nn.Linear(hidden_dim * 2, 1)
+
+        # The Critic head for the Actor-Critic algorithm
+        self.value_head = nn.Linear(hidden_dim, 1)
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         x = self.conv1(x, edge_index)
         x = F.relu(x)
-        x = self.conv2(x, edge_index)
-        x = F.relu(x)
+        # x = self.conv2(x, edge_index)
+        # x = F.relu(x)
         node_embeddings = self.conv3(x, edge_index)
         graph_embedding = global_mean_pool(node_embeddings, batch)
-        return node_embeddings, graph_embedding
+
+        state_value = self.value_head(graph_embedding)
+        
+        return node_embeddings, graph_embedding, state_value.squeeze(-1)

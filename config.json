@@ -28,7 +28,7 @@
         },
         "max_retries": 10,
         "model_name_prefix": "pandemic_model_curriculum",
-        "learning_rate": 0.000551,
+        "learning_rate": 0.001551,
         "gamma": 0.999,
         "num_episodes": 1000,
         "log_interval": 100,
@@ -37,16 +37,16 @@
     "rl_config": {
         "difficulty": "10",
         "learning_rate": 0.001,
-        "gamma": 0.999,
+        "gamma": 1,
         "num_episodes": 1000,
         "log_interval": 2000,
         "load_model_path": null,
         "model_save_path": "models/pandemic_model_curriculum_diff_10_attempt_2.pth",
-        "temperature_prob": 0.2,
+        "temperature_prob": 0.4,
         "temperature_value": 2.0,
         "temperature_weights": {
-            "full_random": 5,
-            "top_2_random": 10,
+            "full_random": 15,
+            "top_2_random": 3,
             "fixed_bonus": 0,
             "proportional_bonus": 0
         }
@@ -57,7 +57,7 @@
         "num_games": 100
     },
     "playback_config": {
-        "model_path": "models/pandemic_model_curriculum_diff_3_attempt_3.pth",
+        "model_path": "models/pandemic_model_curriculum_diff_4_attempt_10.pth",
         "difficulty": "3"
     },
 

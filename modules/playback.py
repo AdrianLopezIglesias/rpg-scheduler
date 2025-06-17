@@ -67,10 +67,11 @@ def run_gnn_playback(config):
 
         with torch.no_grad():
             state.batch = torch.zeros(state.num_nodes, dtype=torch.long)
-            (node_embeddings, graph_embedding) = agent.policy_network(state)
+            
+            # --- MODIFIED: Unpack the state_value returned by the Actor-Critic network ---
+            (node_embeddings, graph_embedding, _) = agent.policy_network(state)
 
             log("\n--- City-Specific State ---")
-            # --- MODIFIED: Added new "ShouldCenter" column to header ---
             header = (f"{'City':<15} | {'Cubes(B,Y,K,R)':<16} | {'Player':>6} | {'HasCard':>7} | {'Center':>6} | {'ShouldCenter':>12}")
             log(header)
             log('-' * len(header))
@@ -82,16 +83,13 @@ def run_gnn_playback(config):
                 has_card_str = f"{1 if city in env.player_hand else 0}"
                 has_center_str = f"{1 if city in env.investigation_centers else 0}"
                 
-                # --- NEW: Logic to calculate "should_have_center" for logging ---
                 should_have_center_val = 0.0
                 if city not in env.investigation_centers:
                     neighbor_has_center = any(neighbor in env.investigation_centers for neighbor in env.map[city]["neighbors"])
                     if not neighbor_has_center:
                         should_have_center_val = 1.0
                 should_center_str = f"{int(should_have_center_val)}"
-                # --- End of new logic ---
 
-                # --- MODIFIED: Added new value to the logged row ---
                 row = (f"{city:<15} | {cubes_str:<16} | {player_str:>6} | {has_card_str:>7} | {has_center_str:>6} | {should_center_str:>12}")
                 log(row)
 

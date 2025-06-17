@@ -12,20 +12,20 @@ def run_curriculum_training(config):
     
     maps_path = os.path.join(os.path.dirname(__file__), '..', 'game', 'maps.json')
     with open(maps_path, 'r') as f:
-        maps_data = json.load(f)
+        all_maps = json.load(f)
 
+    training_maps = [m for m in all_maps if m.get("used_for_training")]
+    
     last_successful_model_path = None
     
-    # --- NEW: Build a cumulative list of difficulties for each stage ---
     active_difficulties = []
-    for difficulty in curriculum_cfg['difficulties']:
+    for current_map in training_maps:
+        difficulty = current_map["id"]
         active_difficulties.append(difficulty)
-        map_title = maps_data.get(difficulty, {}).get('title', 'No Title Found')
+        map_title = current_map.get('title', 'No Title Found')
         log(f"\n{'='*20} Starting Stage: {map_title} (Difficulties: {active_difficulties}) {'='*20}")
         
-        # --- END of new logic ---
-
-        target_win_rate = curriculum_cfg['targets'][difficulty]['target_win_rate']
+        target_win_rate = current_map['expected_winning_rate']
         model_to_load_for_this_stage = last_successful_model_path
 
         for i in range(curriculum_cfg['max_retries']):
@@ -35,34 +35,37 @@ def run_curriculum_training(config):
             current_learning_rate = curriculum_cfg['learning_rate']
             if i > 0:
                 current_learning_rate = current_learning_rate * 0.8
-                log(f"This is a retry. Using smaller learning rate: {current_learning_rate}")
+     
+            log(f"This is a retry. Using smaller learning rate: {current_learning_rate}")
 
             model_save_path = f"models/{curriculum_cfg['model_name_prefix']}_diff_{difficulty}_attempt_{i+1}.pth"
             rl_config = {
-                "difficulties": active_difficulties, # Pass the list of active difficulties
+                "difficulties": active_difficulties, 
                 "learning_rate": current_learning_rate,
                 "gamma": curriculum_cfg['gamma'],
-                "num_episodes": curriculum_cfg['num_episodes'],
+          
+               "num_episodes": curriculum_cfg['num_episodes'],
                 "log_interval": curriculum_cfg['log_interval'],
                 "load_model_path": model_to_load_for_this_stage,
                 "model_save_path": model_save_path
             }
             temp_config['rl_config'] = rl_config
             run_rl_training(temp_config)
-            
+    
+         
             model_to_load_for_this_stage = model_save_path
 
-            # Validate ONLY on the newest difficulty for this stage
             validation_config = {
                 "difficulty": difficulty,
                 "model_path": model_save_path,
-                "num_games": curriculum_cfg['validation_games']
+         
+               "num_games": curriculum_cfg['validation_games']
             }
             temp_config['validation_config'] = validation_config
             val_results = run_validation(temp_config)
             
-            # ... (rest of the validation and checking logic is unchanged) ...
             current_win_rate = val_results.get("win_rate_percent", 0)
+  
             avg_win = val_results.get("avg_win_speed", 'N/A')
             fastest_win = val_results.get("fastest_win_actions", 'N/A')
 
@@ -76,6 +79,7 @@ def run_curriculum_training(config):
                 log(f"SUCCESS: Model passed all checks for difficulty {difficulty}.")
                 last_successful_model_path = model_save_path
                 break
+        
             else:
                 log("Conditions not met. Retraining...")
         else:

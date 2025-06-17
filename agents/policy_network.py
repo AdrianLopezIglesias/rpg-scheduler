@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, global_mean_pool
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim, hidden_dim=64, critic_hidden_dim=16, actor_hidden_dim=64):
+    def __init__(self, input_dim, hidden_dim=128, critic_hidden_dim=128, actor_hidden_dim=128):
         super(PolicyNetwork, self).__init__()
         
         # GCN Layers
@@ -49,8 +49,8 @@ class PolicyNetwork(nn.Module):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         x = self.conv1(x, edge_index)
         x = F.relu(x)
-        x = self.conv2(x, edge_index)
-        x = F.relu(x)
+        # x = self.conv2(x, edge_index)
+        # x = F.relu(x)
         node_embeddings = self.conv3(x, edge_index)
         graph_embedding = global_mean_pool(node_embeddings, batch)
 

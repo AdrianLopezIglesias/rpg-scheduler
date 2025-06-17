@@ -1,7 +1,6 @@
 {
     "curriculum_config": {
         "difficulties": [
-            "0",
             "1",
             "2",
             "3",
@@ -9,12 +8,12 @@
             "5",
             "6",
             "7",
+            "8",
+            "9",
             "10",
-            "11",
-            "15"
+            "11"
         ],
         "targets": {
-            "0": { "target_win_rate": 80.0 },
             "1": { "target_win_rate": 80.0 },
             "2": { "target_win_rate": 80.0 },
             "3": { "target_win_rate": 80.0 },
@@ -22,9 +21,10 @@
             "5": { "target_win_rate": 80.0 },
             "6": { "target_win_rate": 80.0 },
             "7": { "target_win_rate": 80.0 },
+            "8": { "target_win_rate": 80.0 },
+            "9": { "target_win_rate": 80.0 },
             "10": { "target_win_rate": 80.0 },
-            "11": { "target_win_rate": 80.0 },
-            "15": { "target_win_rate": 80.0 }
+            "11": { "target_win_rate": 80.0 }
         },
         "max_retries": 10,
         "model_name_prefix": "pandemic_model_curriculum",

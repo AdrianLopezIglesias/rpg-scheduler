@@ -51,7 +51,7 @@ def run_training_loop(config):
             current_win_rate = analysis_results.get("win_rate_percent", 0)
 
             if current_win_rate >= target_win_rate:
-                log(f"  SUCCESS: Met target win rate for '{difficulty}'. Moving to next difficulty.")
+                log(f"  SUCCESS ✅✅✅✅✅✅: Met target win rate for '{difficulty}'. Moving to next difficulty.")
                 best_model_from_previous_difficulty = last_model_for_this_difficulty
                 break
 

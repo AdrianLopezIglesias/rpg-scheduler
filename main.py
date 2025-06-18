@@ -8,10 +8,11 @@ from modules.rl_trainer import run_rl_training
 from modules.debug_trainer import run_single_train_step_debug
 from modules.validator import run_validation
 from modules.curriculum_trainer import run_curriculum_training
+from modules.critic_curriculum_trainer import run_critic_curriculum
 
 def main():
     parser = argparse.ArgumentParser(description="Pandemic AI CLI")
-    parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl", "playback", "debug_train_step", "validate", "train_curriculum"], help="The action to perform.")
+    parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl", "playback", "debug_train_step", "validate", "train_curriculum","train_mcts"], help="The action to perform.")
     args = parser.parse_args()
     try:
         with open("config.json", "r") as f:
@@ -22,6 +23,8 @@ def main():
 
     if args.command == "train_curriculum":
         run_curriculum_training(config)
+    elif args.command == "train_mcts":
+        run_critic_curriculum(config)
     elif args.command == "train_rl":
         run_rl_training(config)
     elif args.command == "playback":

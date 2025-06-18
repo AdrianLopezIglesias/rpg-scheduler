@@ -1,4 +1,42 @@
 {
+    "mcts_curriculum_config": {
+        "difficulties": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "15"
+        ],
+        "targets": {
+            "1": { "target_win_rate": 90.0 },
+            "2": { "target_win_rate": 85.0 },
+            "3": { "target_win_rate": 80.0 },
+            "4": { "target_win_rate": 80.0 },
+            "5": { "target_win_rate": 75.0 },
+            "6": { "target_win_rate": 70.0 },
+            "7": { "target_win_rate": 70.0 },
+            "8": { "target_win_rate": 65.0 },
+            "10": { "target_win_rate": 60.0 },
+            "11": { "target_win_rate": 50.0 },
+            "15": { "target_win_rate": 40.0 }
+        },
+        "random_agent_generation_prob": 0.1,
+        "exploratory_random_games": 60,
+        "games_per_generation": 10,
+        "max_retries": 10,
+        "model_name_prefix": "pandemic_model_mcts"
+    },
+    "critic_trainer_config": {
+        "epochs": 3,
+        "batch_size": 128
+    },
     "curriculum_config": {
         "max_retries": 10,
         "model_name_prefix": "pandemic_model_curriculum",
@@ -17,7 +55,7 @@
         "load_model_path": null,
         "model_save_path": "models/pandemic_model_curriculum_diff_10_attempt_2.pth",
         "entropy_coeff": 0.04,
-        "temperature_prob": 0.1,
+        "temperature_prob": 0.3,
         "temperature_value": 2.0,
         "temperature_weights": {
             "full_random": 1,
@@ -29,10 +67,10 @@
     "validation_config": {
         "model_path": "models/rl_gnn_model_hard_phase3.pth",
         "difficulty": "hard",
-        "num_games": 100
+        "num_games": 10
     },
     "playback_config": {
-        "model_path": "models/pandemic_model_curriculum_diff_8_attempt_1.pth",
+        "model_path": "models/pandemic_model_mcts_diff_6_attempt_2.pth",
         "difficulty": "8"
     },
     "debug_train_config": {

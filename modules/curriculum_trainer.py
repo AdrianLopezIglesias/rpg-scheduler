@@ -76,7 +76,7 @@ def run_curriculum_training(config):
             log(f"Target Win Rate: >={target_win_rate}%. Actual: {current_win_rate:.2f}%. -> {'MET' if win_rate_ok else 'NOT MET'}")
             
             if win_rate_ok and speed_ok:
-                log(f"SUCCESS: Model passed all checks for difficulty {difficulty}.")
+                log(f"SUCCESS ✅✅✅✅✅✅: Model passed all checks for difficulty {difficulty}.")
                 last_successful_model_path = model_save_path
                 break
         

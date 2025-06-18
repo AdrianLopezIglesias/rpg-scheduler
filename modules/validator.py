@@ -1,7 +1,9 @@
 import torch
 import numpy as np
+import json
 from game.pandemic_game import PandemicGame
-from agents.agents import GNNAgent
+# --- MODIFIED: Import the new GNN_MCTS_Agent ---
+from agents.agents import GNN_MCTS_Agent
 from .utils import log
 
 def run_validation(config):
@@ -12,12 +14,14 @@ def run_validation(config):
     log(f"Games: {val_cfg['num_games']}")
 
     env = PandemicGame(difficulty=val_cfg['difficulty'], config=config)
-    input_dim = env.get_node_feature_count()
-    agent = GNNAgent(input_dim=input_dim, config=config)
 
+    # --- MODIFIED: Instantiate the GNN_MCTS_Agent ---
     try:
-        agent.load_model(val_cfg['model_path'])
-        agent.policy_network.eval()
+        agent = GNN_MCTS_Agent(
+            model_path=val_cfg['model_path'], 
+            difficulty=val_cfg['difficulty'], 
+            config=config
+        )
     except FileNotFoundError:
         log(f"ERROR: Model not found at {val_cfg['model_path']}. Cannot run validation.")
         return {"win_rate_percent": 0, "fastest_win_actions": 'N/A', "avg_win_speed": 'N/A'}
@@ -26,20 +30,43 @@ def run_validation(config):
     win_actions = []
 
     for i in range(val_cfg['num_games']):
-        state = env.reset()
+        env.reset()
         done = False
+        
+        # --- REWRITTEN: The validation loop now uses the new agent's interface ---
         with torch.no_grad():
             while not done:
-                state.batch = torch.zeros(state.num_nodes, dtype=torch.long)
-                action_idx = agent.choose_action(env, state)
-                state, _, done = env.step(action_idx)
+                # 1. Get possible actions as a list
+                possible_actions = env.get_possible_actions()
+                
+                # 2. Agent chooses the best action based on its internal lookahead
+                chosen_action = agent.choose_action(env, possible_actions)
+                
+                # 3. Convert the chosen action dictionary back to an index for the step function
+                chosen_action_json = json.dumps(chosen_action, sort_keys=True)
+                chosen_action_idx = -1
+                for idx, action_dict in env.idx_to_action.items():
+                    if json.dumps(action_dict, sort_keys=True) == chosen_action_json:
+                        chosen_action_idx = idx
+                        break
+                
+                if chosen_action_idx == -1:
+                    log("Error: Agent chose an action that could not be mapped to an index.")
+                    break
+                
+                # 4. Step the environment
+                _, _, done = env.step(chosen_action_idx)
+                
+                is_game_over, _ = env.is_game_over()
+                if is_game_over:
+                    done = True
         
         result = env.is_game_over()[1]
         if result == "win":
             win_count += 1
             win_actions.append(env.actions_taken)
 
-    win_rate = (win_count / val_cfg['num_games']) * 100
+    win_rate = (win_count / val_cfg['num_games']) * 100 if val_cfg['num_games'] > 0 else 0
     fastest_win = min(win_actions) if win_actions else "N/A"
     avg_win_speed = np.mean(win_actions) if win_actions else "N/A"
 

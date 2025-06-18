@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, global_mean_pool
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim, hidden_dim=128, critic_hidden_dim=128, actor_hidden_dim=128):
+    def __init__(self, input_dim, hidden_dim=1024, critic_hidden_dim=1024, actor_hidden_dim=128):
         super(PolicyNetwork, self).__init__()
         
         # GCN Layers
@@ -45,8 +45,22 @@ class PolicyNetwork(nn.Module):
 
         # --- Critic Head (Multi-layer) ---
         self.value_head = nn.Sequential(
-            nn.Linear(hidden_dim, critic_hidden_dim),
+            # Input Layer/First Hidden Layer
+            nn.Linear(critic_hidden_dim, critic_hidden_dim),
             nn.ReLU(),
+            # --- NEW: Second Hidden Layer ---
+            nn.Linear(critic_hidden_dim, critic_hidden_dim),
+            nn.ReLU(),
+            nn.Linear(critic_hidden_dim, critic_hidden_dim),
+            nn.ReLU(),
+            nn.Linear(critic_hidden_dim, critic_hidden_dim),
+            nn.ReLU(),
+            nn.Linear(critic_hidden_dim, critic_hidden_dim),
+            nn.ReLU(),
+            nn.Linear(critic_hidden_dim, critic_hidden_dim),
+            nn.ReLU(),
+            # --- End of New Layer ---
+            # Output Layer
             nn.Linear(critic_hidden_dim, 1)
         )
 
@@ -65,7 +79,7 @@ class PolicyNetwork(nn.Module):
 
         # Layer 3 with residual connection
         x4_out = self.conv4(x, edge_index)
-        node_embeddings = F.relu(self.norm4(x4_out + x)) # Add residual connection from layer 2
+        node_embeddings = F.relu(self.norm4(x1_out + x)) # Add residual connection from layer 2
         
         graph_embedding = global_mean_pool(node_embeddings, batch)
 

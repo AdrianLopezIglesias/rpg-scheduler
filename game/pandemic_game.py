@@ -6,7 +6,7 @@ import torch
 from torch_geometric.data import Data
 
 class PandemicGame:
-    def __init__(self, difficulty="0", config=None):
+    def __init__(self, difficulty="1", config=None):
      
         if not config:
             raise ValueError("A config object must be provided to initialize the game.")
@@ -30,6 +30,21 @@ class PandemicGame:
         self._build_action_maps()
         self._build_edge_index()
         self.reset()
+
+    def get_distance(self, start_city, end_city):
+        if start_city == end_city:
+            return 0
+        q = deque([(start_city, 0)])
+        visited = {start_city}
+        while q:
+            current_city, dist = q.popleft()
+            for neighbor in self.map[current_city]["neighbors"]:
+                if neighbor == end_city:
+                    return dist + 1
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    q.append((neighbor, dist + 1))
+        return float('inf')
 
     def _get_disease_status(self, color):
         for disease in self.diseases:
@@ -238,6 +253,7 @@ class PandemicGame:
 
         if self.actions_taken > 0 and self.actions_taken % 4 == 0:
             self._infect_city()
+            self._draw_card()
 
      
         self._update_disease_statuses()
@@ -265,6 +281,22 @@ class PandemicGame:
         actions_until_infection = (4 - (self.actions_taken % 4)) / 4.0
         remaining_deck_ratio = len(self.deck) / self.initial_deck_size if self.initial_deck_size > 0 else 0
         cards_in_deck_by_color = Counter(self.map[card]['color'] for card in self.deck)
+        
+        # --- NEW: Card Value Feature ---
+        card_value_features = []
+        for color in self.all_possible_colors:
+            cards_in_hand = hand_colors.get(color, 0)
+            cards_in_deck = cards_in_deck_by_color.get(color, 0)
+            needed_for_cure = self.cards_for_cure
+            
+            if needed_for_cure == 0:
+                # Avoid division by zero; value is high if cure is not a goal
+                value = 10.0 
+            else:
+                value = (cards_in_hand + cards_in_deck) / needed_for_cure
+            card_value_features.append(value)
+        # --- End of new logic ---
+
         color_card_features = []
         for color in self.all_possible_colors:
      
@@ -284,7 +316,7 @@ class PandemicGame:
             actions_until_infection, 
   
              remaining_deck_ratio
-        ] + color_card_features
+        ] + color_card_features + card_value_features
 
         for i in range(len(self.all_cities)):
             city_name = self.idx_to_city[i]
@@ -299,7 +331,14 @@ class PandemicGame:
                 neighbor_has_center = any(neighbor in self.investigation_centers for neighbor in self.map[city_name]["neighbors"])
                 if not neighbor_has_center:
                     should_have_center = 1.0
-
+            
+            if not self.investigation_centers:
+                dist_to_center = len(self.all_cities)
+            else:
+                distances = [self.get_distance(city_name, center) for center in self.investigation_centers]
+                dist_to_center = min(distances) if distances else len(self.all_cities)
+            center_proximity = dist_to_center / len(self.all_cities)
+            
             city_cubes = self.board_state[city_name]["cubes"]
  
             cube_features = [city_cubes[c] / 3.0 for c in self.all_possible_colors]
@@ -308,7 +347,7 @@ class PandemicGame:
             eradicated_features = [1.0 if disease_statuses[c] == 'eradicated' else 0.0 for c in self.all_possible_colors]
            
              
-            local_features = [is_player, has_card, has_center, should_have_center]
+            local_features = [is_player, has_card, has_center, should_have_center, center_proximity]
             
             features = cube_features + cure_features + hand_features + eradicated_features + local_features + global_features
             node_features.append(features)
@@ -318,8 +357,17 @@ class PandemicGame:
 
 
     def get_node_feature_count(self):
+        # Recalculated for clarity and correctness
+        per_color_features = len(self.all_possible_colors) * 4 # cubes, cures, hand, eradicated
+        local_node_features = 5 # is_player, has_card, has_center, should_center, center_prox
         
-        return len(self.all_possible_colors) * 4 + 4 + 3 + (len(self.all_possible_colors) * 2)
+        # global features
+        base_global = 3 # norm_cards_cure, actions_infection, deck_ratio
+        color_card_dist_features = len(self.all_possible_colors) * 2
+        card_value_features = len(self.all_possible_colors)
+        total_global = base_global + color_card_dist_features + card_value_features
+
+        return per_color_features + local_node_features + total_global
 
     def _build_action_maps(self):
         self.action_to_idx = {}
@@ -382,3 +430,14 @@ class PandemicGame:
      
                 edge_list.append([self.city_to_idx[city], self.city_to_idx[neighbor]])
         self.edge_index = torch.tensor(edge_list, dtype=torch.long).t().contiguous()
+        
+    def get_possible_actions(self):
+        """
+        Returns a list of possible action dictionaries based on the current game state.
+        """
+        possible_actions_mask = self.get_possible_action_mask()
+        possible_actions = []
+        for i, is_possible in enumerate(possible_actions_mask):
+            if is_possible:
+                possible_actions.append(self.idx_to_action[i])
+        return possible_actions

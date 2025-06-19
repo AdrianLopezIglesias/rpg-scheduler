@@ -67,7 +67,7 @@ def generate_training_data(agent_class, model_path, difficulties, num_games, con
 
         if (i + 1) % 50 == 0:
             current_win_rate = (win_count / (i + 1)) * 100
-            print(f"  ...generated data for {i+1}/{num_games} games. Current Win Rate: {current_win_rate:.1f}%")
+            # print(f"  ...generated data for {i+1}/{num_games} games. Current Win Rate: {current_win_rate:.1f}%")
 
     final_win_rate = (win_count / num_games) * 100 if num_games > 0 else 0
     # Save the generated data to the specified file path

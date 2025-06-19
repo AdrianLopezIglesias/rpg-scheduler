@@ -72,14 +72,13 @@ class PolicyNetwork(nn.Module):
 
         # Layer 2 with residual connection
         x2_out = self.conv2(x, edge_index)
-        x = F.relu(self.norm2(x2_out + x1_out)) # Add residual connection from layer 1
+        x = F.relu(self.norm2(x2_out + x1_out))
 
         x3_out = self.conv3(x, edge_index)
-        x = F.relu(self.norm3(x3_out + x1_out)) # Add residual connection from layer 1
+        x = F.relu(self.norm3(x3_out + x1_out))
 
-        # Layer 3 with residual connection
         x4_out = self.conv4(x, edge_index)
-        node_embeddings = F.relu(self.norm4(x1_out + x)) # Add residual connection from layer 2
+        node_embeddings = F.relu(self.norm4(x4_out + x))
         
         graph_embedding = global_mean_pool(node_embeddings, batch)
 

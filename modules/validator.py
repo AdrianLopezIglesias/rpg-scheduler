@@ -70,7 +70,7 @@ def run_validation(config):
     fastest_win = min(win_actions) if win_actions else "N/A"
     avg_win_speed = np.mean(win_actions) if win_actions else "N/A"
 
-    log("\n=============== VALIDATION RESULTS ===============")
+    log("\n=============== 🧱🧱🧱🧱 VALIDATION RESULTS 🧱🧱🧱🧱 ===============")
     log(f"Win Rate: {win_rate:.2f}% ({win_count}/{val_cfg['num_games']})")
     log(f"Fastest Win: {fastest_win} actions")
     log(f"Average Win Speed: {avg_win_speed:.2f} actions" if isinstance(avg_win_speed, float) else f"{avg_win_speed} actions")

@@ -28,14 +28,14 @@
             "11": { "target_win_rate": 90.0 }
         },
         "random_agent_generation_prob": 0.1,
-        "exploratory_random_games": 20,
-        "games_per_generation": 10,
-        "max_retries": 10,
+        "exploratory_random_games": 10,
+        "games_per_generation": 20,
+        "max_retries": 20,
         "model_name_prefix": "pandemic_model_mcts"
     },
     "critic_trainer_config": {
         "epochs": 3,
-        "batch_size": 128
+        "batch_size": 64
     },
     "curriculum_config": {
         "max_retries": 10,

@@ -89,7 +89,7 @@ def run_critic_curriculum(config):
                 )
 
             target_win_rate = curriculum_cfg['targets'][difficulty]['target_win_rate']
-            log(f"\n--- Attempt {i+1}/{curriculum_cfg['max_retries']} for Difficulty Stage {difficulty} ---")
+            log(f"\n--- 📚📚📚📚📚📚 Attempt {i+1}/{curriculum_cfg['max_retries']} for Difficulty Stage {difficulty} ---")
             
             agent_for_data_gen = _pick_agent_for_data_gen(model_to_load_for_this_stage, config)
             
@@ -143,7 +143,7 @@ def run_critic_curriculum(config):
             current_win_rate = val_results.get("win_rate_percent", 0)
             win_rate_ok = current_win_rate >= target_win_rate
             log(f"--- Validation Check ---")
-            log(f"Target Win Rate: >={target_win_rate}%. Actual: {current_win_rate:.2f}%. -> {'MET' if win_rate_ok else 'NOT MET'}")
+            log(f"Target Win Rate: >={target_win_rate}%. Actual: {current_win_rate:.2f}%. -> {'MET' if win_rate_ok else 'NOT MET ❌❌❌❌❌❌'}")
             if win_rate_ok:
                 log(f"SUCCESS ✅✅✅✅✅✅ : Model passed all checks for difficulty {difficulty}.")
                 last_successful_model_path = model_save_path

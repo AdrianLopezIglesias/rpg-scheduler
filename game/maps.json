@@ -5,10 +5,10 @@
         "expected_winning_rate": 80,
         "cards_for_cure": 3,
         "title": "Basic move and treat",
-        "max_actions_per_game": 50,
+        "max_actions_per_game": 10,
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
-        "initial_cubes": { "three_cubes": 1, "two_cubes": 1, "one_cube": 1 },
+        "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 1 },
         "investigation_centers": ["Atlanta"],
         "cities": {
             "Atlanta": {
@@ -29,12 +29,12 @@
         "id": "2",
         "used_for_training": true,
         "expected_winning_rate": 80,
-        "cards_for_cure": 1,
-        "title": "Find simple cure",
-        "max_actions_per_game": 100,
+        "cards_for_cure": 3,
+        "title": "Treat harder",
+        "max_actions_per_game": 20,
         "colors_in_play": ["blue"],
-        "cures_found": [],
-        "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
+        "cures_found": ["blue"],
+        "initial_cubes": { "three_cubes": 1, "two_cubes": 1, "one_cube": 1 },
         "investigation_centers": ["Atlanta"],
         "cities": {
             "Atlanta": {
@@ -57,7 +57,7 @@
         "expected_winning_rate": 80,
         "cards_for_cure": 2,
         "title": "Find simple cure 2",
-        "max_actions_per_game": 100,
+        "max_actions_per_game": 20,
         "colors_in_play": ["blue"],
         "cures_found": [],
         "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
@@ -80,10 +80,10 @@
     {
         "id": "4",
         "used_for_training": true,
-        "expected_winning_rate": 80,
-        "cards_for_cure": 1,
+        "expected_winning_rate": 90,
+        "cards_for_cure": 3,
         "title": "Find simple cure",
-        "max_actions_per_game": 100,
+        "max_actions_per_game": 20,
         "colors_in_play": ["blue"],
         "cures_found": [],
         "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
@@ -107,9 +107,9 @@
         "id": "5",
         "used_for_training": true,
         "expected_winning_rate": 80,
-        "cards_for_cure": 3,
+        "cards_for_cure": 4,
         "title": "Find harder cure",
-        "max_actions_per_game": 30,
+        "max_actions_per_game": 40,
         "colors_in_play": ["blue"],
         "cures_found": [],
         "initial_cubes": { "three_cubes": 0, "two_cubes": 0, "one_cube": 0 },
@@ -126,6 +126,10 @@
             "Washington": {
                 "color": "blue",
                 "neighbors": ["Atlanta", "Chicago"]
+            },
+            "New York": {
+                "color": "blue",
+                "neighbors": ["Washington", "Montreal"]
             }
         }
     },
@@ -135,7 +139,7 @@
         "expected_winning_rate": 80,
         "cards_for_cure": 2,
         "title": "Find cure and treat",
-        "max_actions_per_game": 150,
+        "max_actions_per_game": 100,
         "colors_in_play": ["blue"],
         "cures_found": [],
         "initial_cubes": { "three_cubes": 1, "two_cubes": 1, "one_cube": 1 },
@@ -161,7 +165,7 @@
         "expected_winning_rate": 80,
         "cards_for_cure": 3,
         "title": "Treat harder",
-        "max_actions_per_game": 100,
+        "max_actions_per_game": 40,
         "colors_in_play": ["blue"],
         "cures_found": ["blue"],
         "initial_cubes": { "three_cubes": 2, "two_cubes": 2, "one_cube": 1 },
@@ -192,8 +196,8 @@
     {
         "id": "8",
         "used_for_training": true,
-        "expected_winning_rate": 80,
-        "cards_for_cure": 4,
+        "expected_winning_rate": 90,
+        "cards_for_cure": 5,
         "title": "Find most hard cure",
         "max_actions_per_game": 30,
         "colors_in_play": ["blue"],

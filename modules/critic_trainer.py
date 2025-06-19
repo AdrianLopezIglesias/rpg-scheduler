@@ -26,7 +26,7 @@ def train_critic_from_data(agent, training_data, config,difficulty):
         print("--- Critic training skipped: No data provided. ---")
         return
 
-    print(f"--- Starting Critic training: {len(training_data)} examples, {epochs} epochs, batch size {batch_size} ---")
+    print(f"--- 👨‍🎓👨‍🎓👨‍🎓👨‍🎓 Starting Critic training 👨‍🎓👨‍🎓👨‍🎓👨‍🎓: {len(training_data)} examples, {epochs} epochs, batch size {batch_size} ---")
 
     # Set the network to training mode
     agent.policy_network.train()

@@ -5,3 +5,10 @@ world_size:
 
 agent:
   move_distance: 100
+  strength: 50
+
+threats:
+  basic_random:
+    count: 1
+    move_distance: 100
+    strength: 100

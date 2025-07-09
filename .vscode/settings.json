@@ -1,6 +1,5 @@
 {
 	"files.exclude": {
-		"**/.git": true,
 		"**/.svn": true,
 		"**/.hg": true,
 		"**/.DS_Store": true,
@@ -20,7 +19,6 @@
 		"server.php": true,
 		".rfcs": true,
 		".es**": true,
-		".git**": true,
 		".tool**": true,
 		".jshi**": true,
 		"**.sh": true,

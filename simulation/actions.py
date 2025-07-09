@@ -14,3 +14,8 @@ class HoldAction(Action):
 class MoveAction(Action):
     """The agent chooses to move at a specific angle."""
     angle: float # Angle in degrees
+
+@dataclass
+class AttackAction(Action):
+    """The agent chooses to attack a target."""
+    target_id: int

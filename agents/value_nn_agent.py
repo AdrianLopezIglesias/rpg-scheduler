@@ -9,16 +9,22 @@ from .base_agent import Agent
 
 class ValueNet(nn.Module):
     """A simple MLP to evaluate a game state vector."""
-    def __init__(self, input_dim, hidden_dim1=256, hidden_dim2=128):
+    def __init__(self, input_dim, hidden_dim1=2048, hidden_dim2=2048):
         super(ValueNet, self).__init__()
-        self.layer1 = nn.Linear(input_dim, hidden_dim1)
+        self.layer1 = nn.Linear(input_dim, hidden_dim2)
         self.layer2 = nn.Linear(hidden_dim1, hidden_dim2)
-        self.layer3 = nn.Linear(hidden_dim2, 1)
+        self.layer3 = nn.Linear(hidden_dim2, hidden_dim2)
+        self.layer4 = nn.Linear(hidden_dim2, hidden_dim2)
+        self.layer5 = nn.Linear(hidden_dim2, 1)
 
     def forward(self, x):
+		
         x = F.relu(self.layer1(x))
-        x = F.relu(self.layer2(x))
-        return self.layer3(x)
+        # return x
+        # x = F.relu(self.layer2(x))
+        # x = F.relu(self.layer3(x))
+        # x = F.relu(self.layer4(x))
+        return self.layer5(x)
 
 class ValueNNAgent(Agent):
     """An agent that uses a ValueNet to look one step ahead."""
@@ -59,6 +65,7 @@ class ValueNNAgent(Agent):
 
                 # Get the score from the critic
                 predicted_score = self.model(state_tensor).item()
+                # print('Predicted score : ' + str(predicted_score))
 
                 if predicted_score > best_score:
                     best_score = predicted_score

@@ -374,24 +374,30 @@ class PandemicGame:
         self.idx_to_action = {}
         action_idx_counter = 0
         for i in range(len(self.all_cities)):
-            self.action_to_idx[json.dumps({"type": "move", "target_idx": i})] = action_idx_counter
-            self.idx_to_action[action_idx_counter] = {"type": "move", "target_idx": i}
+            action_dict = {"type": "move", "target_idx": i}
+            self.action_to_idx[json.dumps(action_dict, sort_keys=True)] = action_idx_counter
+            self.idx_to_action[action_idx_counter] = action_dict
             action_idx_counter += 1
         for i in range(len(self.all_cities)):
             for color in self.all_possible_colors:
-                self.action_to_idx[json.dumps({"type": "treat", "target_idx": i, "color": color})] = action_idx_counter
-                self.idx_to_action[action_idx_counter] = {"type": "treat", "target_idx": i, "color": color}
+                action_dict = {"type": "treat", "target_idx": i, "color": color}
+                self.action_to_idx[json.dumps(action_dict, sort_keys=True)] = action_idx_counter
+                self.idx_to_action[action_idx_counter] = action_dict
                 action_idx_counter += 1
         for color in self.all_possible_colors:
-            self.action_to_idx[json.dumps({"type": "discover_cure", "color": color})] = action_idx_counter
-            self.idx_to_action[action_idx_counter] = {"type": "discover_cure", "color": color}
+            action_dict = {"type": "discover_cure", "color": color}
+            self.action_to_idx[json.dumps(action_dict, sort_keys=True)] = action_idx_counter
+            self.idx_to_action[action_idx_counter] = action_dict
             action_idx_counter += 1
         for i in range(len(self.all_cities)):
-            self.action_to_idx[json.dumps({"type": "build_investigation_center", "target_idx": i})] = action_idx_counter
-            self.idx_to_action[action_idx_counter] = {"type": "build_investigation_center", "target_idx": i}
+            action_dict = {"type": "build_investigation_center", "target_idx": i}
+            self.action_to_idx[json.dumps(action_dict, sort_keys=True)] = action_idx_counter
+            self.idx_to_action[action_idx_counter] = action_dict
             action_idx_counter += 1
-        self.action_to_idx[json.dumps({"type": "pass"})] = action_idx_counter
-        self.idx_to_action[action_idx_counter] = {"type": "pass"}
+            
+        action_dict = {"type": "pass"}
+        self.action_to_idx[json.dumps(action_dict, sort_keys=True)] = action_idx_counter
+        self.idx_to_action[action_idx_counter] = action_dict
 
     def get_possible_action_mask(self):
         mask = [False] * len(self.action_to_idx)
@@ -401,23 +407,23 @@ class PandemicGame:
             if neighbor not in self.city_to_idx: continue
             neighbor_idx = self.city_to_idx[neighbor]
        
-            mask[self.action_to_idx[json.dumps({"type": "move", "target_idx": neighbor_idx})]] = True
+            mask[self.action_to_idx[json.dumps({"type": "move", "target_idx": neighbor_idx}, sort_keys=True)]] = True
         
         for color in self.colors_in_play:
             if self.board_state[self.player_location]["cubes"][color] > 0:
-                mask[self.action_to_idx[json.dumps({"type": "treat", "target_idx": player_loc_idx, "color": color})]] = True
+                mask[self.action_to_idx[json.dumps({"type": "treat", "target_idx": player_loc_idx, "color": color}, sort_keys=True)]] = True
         
         if self.player_location in self.investigation_centers:
             hand_colors = Counter(self.map[card]['color'] for card in self.player_hand)
             for disease in self.diseases:
                 if disease['status'] == 'active' and hand_colors.get(disease['color'], 0) >= self.cards_for_cure:
-                    mask[self.action_to_idx[json.dumps({"type": "discover_cure", "color": disease['color']})]] = True
+                    mask[self.action_to_idx[json.dumps({"type": "discover_cure", "color": disease['color']}, sort_keys=True)]] = True
         
         if self.player_location not in self.investigation_centers and self.player_location in self.player_hand:
         
-             mask[self.action_to_idx[json.dumps({"type": "build_investigation_center", "target_idx": player_loc_idx})]] = True
+             mask[self.action_to_idx[json.dumps({"type": "build_investigation_center", "target_idx": player_loc_idx}, sort_keys=True)]] = True
 
-        mask[self.action_to_idx[json.dumps({"type": "pass"})]] = True
+        mask[self.action_to_idx[json.dumps({"type": "pass"}, sort_keys=True)]] = True
 
         return torch.tensor(mask, dtype=torch.bool)
 

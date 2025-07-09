@@ -1,0 +1,7 @@
+# Configuration for the simulation environment
+world_size:
+  width: 1000
+  height: 1000
+
+agent:
+  move_distance: 100

@@ -1,50 +1,49 @@
-import json
-import argparse
-from modules.orchestrator import run_training_loop, run_calibration_loop
-from modules.tester import run_test, run_debug
-from modules.playback import run_gnn_playback
-from modules.utils import log
-from modules.rl_trainer import run_rl_training
-from modules.debug_trainer import run_single_train_step_debug
-from modules.validator import run_validation
-from modules.curriculum_trainer import run_curriculum_training
-from modules.critic_curriculum_trainer import run_critic_curriculum
-from modules.value_nn_curriculum_trainer import run_value_nn_curriculum
+# main.py
 
-def main():
-    parser = argparse.ArgumentParser(description="Pandemic AI CLI")
-    parser.add_argument("command", choices=["train", "test", "debug", "calibrate", "train_rl", "playback", "debug_train_step", "validate", "train_curriculum","train_mcts", "train_value_nn"], help="The action to perform.")
-    args = parser.parse_args()
-    try:
-        with open("config.json", "r") as f:
-            config = json.load(f)
-    except FileNotFoundError:
-        log("Error: config.json not found. Please create it.")
-        return
+import yaml
+from simulation.simulator import Simulator
+from simulation.actions import MoveAction, HoldAction
 
-    if args.command == "train_value_nn":
-        run_value_nn_curriculum(config)
-    elif args.command == "train_curriculum":
-        run_curriculum_training(config)
-    elif args.command == "train_mcts":
-        run_critic_curriculum(config)
-    elif args.command == "train_rl":
-        run_rl_training(config)
-    elif args.command == "playback":
-        run_gnn_playback(config)
-    elif args.command == "debug_train_step":
-        run_single_train_step_debug(config)
-    elif args.command == "validate":
-        run_validation(config)
-    elif args.command == "train":
-        log("Running original supervised training loop.")
-        run_training_loop(config)
-    elif args.command == "calibrate":
-        run_calibration_loop(config)
-    elif args.command == "test":
-        run_test(config)
-    elif args.command == "debug":
-        run_debug(config)
+def load_config(path="config/sim_config.yaml"):
+    """Loads the simulation configuration from a YAML file."""
+    with open(path, 'r') as f:
+        return yaml.safe_load(f)
+
+def play_mode():
+    """
+    Runs an interactive play mode in the console to test the simulator.
+    """
+    config = load_config()
+    sim = Simulator(config)
+    
+    print("--- Simulation Play Mode ---")
+    print("Commands: 'move [angle]', 'hold', 'quit'")
+    
+    while True:
+        print("-" * 20)
+        print(f"Current Position: ({sim.state.agent_x}, {sim.state.agent_y})")
+        
+        user_input = input("Enter command: ").strip().lower()
+        parts = user_input.split()
+        command = parts[0]
+
+        if command == "quit":
+            print("Exiting play mode.")
+            break
+        elif command == "hold":
+            sim.step(HoldAction())
+        elif command == "move":
+            if len(parts) > 1:
+                try:
+                    angle = float(parts[1])
+                    sim.step(MoveAction(angle=angle))
+                except ValueError:
+                    print("Invalid angle. Please enter a number.")
+            else:
+                print("Move command requires an angle. E.g., 'move 45'")
+        else:
+            print("Unknown command.")
 
 if __name__ == "__main__":
-    main()
+    play_mode()
+
